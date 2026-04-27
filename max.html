@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AIMAX — Dashboard Max</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=JetBrains+Mono:wght@400;600&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --black:#000;--black2:#0a0a0a;--black3:#111;--black4:#1a1a1a;--black5:#242424;
+  --gold:#D4AF37;--gold2:#f0cc55;--gold3:#a88a20;
+  --white:#fff;--white2:#f5f5f5;--grey:#888;--grey2:#555;--grey3:#333;
+  --red:#e05252;--green:#52c07a;--sidebar-w:230px;--radius:6px;--transition:0.2s ease;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--black);color:var(--white);font-family:'DM Sans',sans-serif;font-size:14px;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;cursor:pointer}
+.hidden{display:none!important}
+
+/* APP */
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--black2);border-right:1px solid var(--black5);display:flex;flex-direction:column;transition:transform var(--transition);z-index:100}
+.sidebar-brand{display:flex;align-items:center;gap:12px;padding:24px 20px;border-bottom:1px solid var(--black5)}
+.brand-mark{width:26px;height:26px;border:2px solid var(--gold);transform:rotate(45deg);flex-shrink:0;position:relative}
+.brand-mark::after{content:'';position:absolute;inset:5px;background:var(--gold)}
+.brand-text{display:flex;flex-direction:column;line-height:1.1}
+.brand-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;color:var(--gold)}
+.brand-sub{font-size:9px;letter-spacing:2px;color:var(--grey);text-transform:uppercase}
+.sidebar-nav{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:4px;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 12px;color:var(--grey);border-radius:var(--radius);transition:all var(--transition);font-size:13px;font-weight:500;letter-spacing:.3px;cursor:pointer}
+.nav-item:hover{color:var(--white);background:var(--black4)}
+.nav-item.active{color:var(--gold);background:rgba(212,175,55,.08)}
+.nav-item.active svg{stroke:var(--gold)}
+.sidebar-footer{padding:16px 20px;border-top:1px solid var(--black5);display:flex;align-items:center;justify-content:space-between}
+.sync-status{display:flex;align-items:center;gap:8px}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+.sync-label{font-size:11px;color:var(--green);letter-spacing:1px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.btn-logout{font-size:11px;color:var(--grey2);background:none;border:none;cursor:pointer;letter-spacing:1px;transition:color var(--transition)}
+.btn-logout:hover{color:var(--red)}
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;background:var(--black)}
+.topbar{padding:16px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--black5);background:var(--black2);position:sticky;top:0;z-index:50}
+.topbar-left{display:flex;align-items:center;gap:14px}
+.menu-toggle{display:none;background:none;border:none;color:var(--white);cursor:pointer;padding:4px}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--white)}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.live-badge{display:flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid rgba(82,192,122,.3);background:rgba(82,192,122,.07);font-size:10px;font-weight:600;letter-spacing:2px;color:var(--green);border-radius:100px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite}
+.topbar-time{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--grey)}
+.section{display:none;padding:24px}
+.section.active{display:block}
+.section-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px}
+.section-header h2{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--white)}
+.section-header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+/* METRICS STRIP */
+.metrics-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.metric-card{background:var(--black3);border:1px solid var(--black5);padding:16px;display:flex;flex-direction:column;gap:4px}
+.metric-card.highlight{border-color:var(--gold3)}
+.metric-label{font-size:10px;letter-spacing:2px;color:var(--grey);text-transform:uppercase}
+.metric-value{font-family:'Bebas Neue',sans-serif;font-size:38px;color:var(--white);line-height:1}
+.metric-value.small{font-size:18px;line-height:1.3}
+.metric-unit{font-size:11px;color:var(--grey2)}
+
+/* FILTERS */
+.filters-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap}
+.filter-tabs{display:flex;gap:4px;flex-wrap:wrap}
+.filter-tab{padding:7px 14px;background:var(--black3);border:1px solid var(--black5);color:var(--grey);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;border-radius:var(--radius);transition:all var(--transition);letter-spacing:.3px}
+.filter-tab:hover{color:var(--white);border-color:var(--grey3)}
+.filter-tab.active{background:var(--gold);color:var(--black);border-color:var(--gold);font-weight:600}
+.filter-right{display:flex;align-items:center;gap:10px}
+.orders-count{font-size:12px;color:var(--grey2);font-family:'JetBrains Mono',monospace}
+.export-dropdown{position:relative}
+.btn-export{display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--black3);border:1px solid var(--black5);color:var(--grey);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;border-radius:var(--radius);transition:all var(--transition)}
+.btn-export:hover{color:var(--white);border-color:var(--grey3)}
+.export-menu{position:absolute;top:100%;right:0;margin-top:4px;background:var(--black3);border:1px solid var(--black5);border-radius:var(--radius);overflow:hidden;min-width:160px;display:none;z-index:100}
+.export-menu.open{display:block}
+.export-menu button{display:block;width:100%;padding:10px 14px;background:none;border:none;color:var(--grey);font-family:'DM Sans',sans-serif;font-size:13px;text-align:left;cursor:pointer;transition:all var(--transition)}
+.export-menu button:hover{background:var(--black4);color:var(--white)}
+.btn-refresh{display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:var(--black3);border:1px solid var(--black5);color:var(--grey);cursor:pointer;border-radius:var(--radius);transition:all var(--transition)}
+.btn-refresh:hover{color:var(--white);border-color:var(--grey3)}
+.btn-refresh.spinning svg{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ORDERS */
+.orders-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.order-card{background:var(--black3);border:1px solid var(--black5);padding:18px;transition:border-color var(--transition)}
+.order-card:hover{border-color:var(--grey3)}
+.order-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.order-number{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--grey);margin-bottom:5px;display:flex;align-items:center;gap:8px}
+.order-client{font-weight:600;font-size:15px;color:var(--white)}
+.order-meta{font-size:12px;color:var(--grey);margin-top:3px}
+.order-time{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--gold3)}
+.order-divider{height:1px;background:var(--black5);margin-bottom:12px}
+.order-items{margin-bottom:12px}
+.order-item-line{font-size:13px;color:var(--white2);line-height:1.7}
+.order-meta-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:8px}
+.order-meta-label{font-size:11px;color:var(--grey2);flex-shrink:0}
+.order-meta-val{font-size:12px;color:var(--white2);text-align:right}
+.order-total{display:flex;justify-content:space-between;align-items:center;padding:10px 0 0;border-top:1px solid var(--black5);margin-top:10px}
+.order-total-label{font-size:10px;letter-spacing:2px;color:var(--grey)}
+.order-total-value{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);letter-spacing:1px}
+.btn-print{display:flex;align-items:center;gap:6px;margin-top:12px;width:100%;padding:8px;background:var(--black4);border:1px solid var(--black5);color:var(--grey);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;border-radius:var(--radius);transition:all var(--transition);justify-content:center}
+.btn-print:hover{color:var(--white);border-color:var(--grey3)}
+.entrega-badge{display:inline-block;padding:2px 8px;border-radius:100px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.badge-dom{background:rgba(212,175,55,.12);color:var(--gold3);border:1px solid var(--gold3)}
+.badge-local{background:rgba(82,192,122,.1);color:var(--green);border:1px solid rgba(82,192,122,.3)}
+.empty-state{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--grey2)}
+.empty-icon{font-size:40px;margin-bottom:16px}
+
+/* METRICS GRID */
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.metrics-big-card{background:var(--black3);border:1px solid var(--black5);padding:20px;display:flex;flex-direction:column;gap:6px}
+.mbcard-label{font-size:10px;letter-spacing:2px;color:var(--grey);text-transform:uppercase}
+.mbcard-number{font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--white);line-height:1}
+.metrics-big-card.gold .mbcard-number{color:var(--gold)}
+.top-products-card{background:var(--black3);border:1px solid var(--black5);padding:24px}
+.tpc-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--white);margin-bottom:16px}
+.top-products-list{display:flex;flex-direction:column;gap:10px}
+.tpl-item{display:flex;align-items:center;gap:12px}
+.tpl-rank{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold3);width:24px;flex-shrink:0}
+.tpl-name{flex:1;font-size:13px;color:var(--white2)}
+.tpl-count{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--grey)}
+.tpl-bar{height:3px;background:var(--gold);border-radius:2px;transition:width .5s ease}
+.tpl-bar.red-bar{background:var(--red)}
+
+/* CONFIG */
+.config-card{background:var(--black3);border:1px solid var(--black5);padding:24px;margin-bottom:16px}
+.config-section-title{font-size:15px;font-weight:600;color:var(--white);margin-bottom:14px;letter-spacing:.3px}
+.config-desc{font-size:13px;color:var(--grey);margin-bottom:10px}
+.config-input{width:100%;background:var(--black4);border:1px solid var(--black5);color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;padding:11px 14px;outline:none;border-radius:var(--radius);transition:border-color var(--transition)}
+.config-input:focus{border-color:var(--gold3)}
+.btn-config-save{margin-top:12px;padding:10px 20px;background:var(--gold);color:var(--black);border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:.5px;border-radius:var(--radius);transition:background var(--transition)}
+.btn-config-save:hover{background:var(--gold2)}
+.config-info{margin-top:18px;padding:16px;background:var(--black4);border-left:2px solid var(--gold3);font-size:12px;color:var(--grey);line-height:2}
+.config-info strong{color:var(--white2)}
+.config-info ol{margin-left:18px;margin-top:6px}
+.config-info code{background:var(--black5);padding:2px 6px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gold)}
+.config-msg{margin-top:10px;font-size:12px;color:var(--green)}
+
+/* TICKET SIZE */
+.ticket-size-selector{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+.ticket-size-option{flex:1;min-width:100px;padding:14px 12px;background:var(--black4);border:1px solid var(--black5);border-radius:var(--radius);cursor:pointer;transition:all var(--transition);text-align:center}
+.ticket-size-option:hover{border-color:var(--gold3)}
+.ticket-size-option.selected{border-color:var(--gold);background:rgba(212,175,55,.08)}
+.tso-label{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:var(--gold);line-height:1}
+.tso-sub{font-size:11px;color:var(--grey);margin-top:5px;line-height:1.5}
+.tso-sub span{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--grey2)}
+
+/* PRINT MODAL */
+.print-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:2000}
+.ticket{width:300px;background:#fff;color:#000;font-family:'Courier Prime','Courier New',monospace;font-size:13px;padding:20px 16px;border-radius:2px;max-height:90vh;overflow-y:auto}
+.ticket-header{text-align:center;padding-bottom:12px;border-bottom:1px dashed #ccc;margin-bottom:12px}
+.ticket-logo{font-family:'Courier Prime',monospace;font-size:28px;font-weight:700;letter-spacing:6px}
+.ticket-resto{font-size:13px;font-weight:700;margin-top:4px}
+.ticket-tagline{font-size:10px;color:#666;letter-spacing:1px;margin-top:2px}
+.ticket-info{margin-bottom:12px;border-bottom:1px dashed #ccc;padding-bottom:10px}
+.ticket-info-row{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px}
+.ticket-info-label{color:#666}.ticket-info-value{font-weight:700}
+.ticket-client{margin-bottom:12px;border-bottom:1px dashed #ccc;padding-bottom:10px}
+.ticket-client-label{font-size:10px;color:#666;letter-spacing:1px;text-transform:uppercase}
+.ticket-client-name{font-size:15px;font-weight:700;margin-top:3px}
+.ticket-items{margin-bottom:12px;border-bottom:1px dashed #ccc;padding-bottom:10px}
+.ticket-items-title{font-size:10px;color:#666;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.ticket-item{display:flex;gap:6px;font-size:13px;margin-bottom:4px}
+.ticket-item-qty{font-weight:700;min-width:28px}
+.ticket-total{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:16px;padding:8px 0;border-bottom:1px dashed #ccc;margin-bottom:12px}
+.ticket-total-label{font-size:11px;letter-spacing:1px}
+.ticket-footer{text-align:center;font-size:11px;color:#666;padding-top:8px}
+.footer-brand{font-size:10px;margin-top:4px;letter-spacing:1px}
+.print-modal-actions{display:flex;gap:10px;margin-top:16px}
+.btn-action{flex:1;padding:10px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;border-radius:4px}
+.btn-print-now{background:#D4AF37;color:#000}
+.btn-close-modal{background:#242424;color:#fff}
+
+/* REVENUE STRIP */
+.revenue-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.rev-card{background:var(--black3);border:1px solid #222;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.rev-card-gold{border-color:#D4AF37}
+.rev-icon{font-size:22px}
+.rev-info{display:flex;flex-direction:column;gap:2px}
+.rev-label{font-size:10px;font-weight:600;letter-spacing:1.5px;color:#888;text-transform:uppercase}
+.rev-value{font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:1px;line-height:1}
+.rev-card-gold .rev-value{color:#D4AF37}
+
+/* BAR CHARTS */
+.bar-chart{display:flex;align-items:flex-end;gap:6px;height:160px;overflow-x:auto;padding-bottom:4px}
+.bar-item{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:50px}
+.bar-wrap{width:100%;height:120px;display:flex;align-items:flex-end}
+.bar-fill{width:100%;background:#D4AF37;border-radius:4px 4px 0 0;transition:height .4s;min-height:2px}
+.bar-value{font-size:10px;color:#aaa;white-space:nowrap}
+.bar-label{font-size:10px;color:#666;white-space:nowrap}
+
+/* HORAS */
+.horas-bar-chart{display:flex;align-items:flex-end;gap:3px;height:160px;overflow-x:auto;padding-bottom:4px}
+.hora-bar-item{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:28px;flex:1}
+.hora-bar-item.hora-peak .hora-bar-fill{background:#D4AF37!important}
+.hora-bar-wrap{width:100%;height:120px;display:flex;align-items:flex-end}
+.hora-bar-fill{width:100%;background:#333;border-radius:3px 3px 0 0;transition:height .3s;min-height:2px}
+.hora-bar-count{font-size:9px;color:#888}
+.hora-bar-label{font-size:8px;color:#555;white-space:nowrap}
+.horas-tabla{width:100%;border-collapse:collapse;font-size:12px}
+.horas-tabla th{background:#111;color:#888;font-size:10px;padding:6px 8px;text-align:center;font-weight:600;letter-spacing:1px}
+.horas-tabla-hora{color:#aaa;font-family:'JetBrains Mono',monospace;font-size:11px;padding:4px 8px;white-space:nowrap}
+.horas-cell{text-align:center;padding:4px 6px;font-size:11px;color:#aaa;border-radius:3px}
+.horas-cell.hot{background:#D4AF3733;color:#D4AF37;font-weight:700}
+.horas-cell.warm{background:#D4AF3722;color:#c8a530}
+.horas-cell.cool{background:#ffffff08;color:#888}
+
+/* CLIENTES */
+.cliente-row{background:#111;border:1px solid #222;border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.cliente-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.cliente-nombre{font-weight:600;font-size:15px;color:#fff;display:block}
+.cliente-tel{font-size:12px;color:#888;margin-top:2px;display:block}
+.cliente-stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.cliente-stat{display:flex;flex-direction:column;align-items:center;background:#161616;border-radius:6px;padding:6px 10px;min-width:70px}
+.cliente-stat-val{font-family:'Bebas Neue',sans-serif;font-size:18px;color:#D4AF37}
+.cliente-stat-lab{font-size:9px;color:#666;letter-spacing:1px;text-transform:uppercase;margin-top:1px}
+.cliente-prods{font-size:12px;color:#888;border-top:1px solid #222;padding-top:8px;margin-top:4px}
+
+/* ══════════════════════════════════════
+   CIERRE DE CAJA STYLES
+══════════════════════════════════════ */
+.cierre-topbar{background:linear-gradient(135deg,var(--black2),var(--black3));border:1px solid var(--gold3);border-radius:8px;padding:22px 28px;margin-bottom:20px;position:relative;overflow:hidden}
+.cierre-topbar::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.cierre-topbar-title{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:4px;color:var(--gold)}
+.cierre-topbar-sub{font-size:12px;color:var(--grey);margin-top:2px}
+.cierre-fecha-badge{display:inline-block;margin-top:8px;background:rgba(212,175,55,.1);border:1px solid var(--gold3);color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:12px;padding:3px 12px;border-radius:100px}
+
+.cierre-base-row{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;background:var(--black3);border:1px solid var(--black5);padding:20px 24px;margin-bottom:20px}
+.cierre-base-label{font-size:10px;letter-spacing:2px;color:var(--grey);text-transform:uppercase;margin-bottom:6px}
+.cierre-base-input{background:var(--black4);border:1px solid var(--gold3);color:var(--gold);font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;padding:8px 14px;outline:none;border-radius:var(--radius);width:200px;transition:border-color var(--transition)}
+.cierre-base-input:focus{border-color:var(--gold)}
+.btn-sacar-z{padding:12px 28px;background:var(--gold);color:var(--black);border:none;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;border-radius:var(--radius);transition:background var(--transition),transform .1s;display:flex;align-items:center;gap:8px}
+.btn-sacar-z:hover{background:var(--gold2)}.btn-sacar-z:active{transform:scale(.97)}
+.btn-imprimir-z{padding:10px 20px;background:transparent;color:var(--gold);border:1px solid var(--gold3);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;border-radius:var(--radius);transition:all var(--transition)}
+.btn-imprimir-z:hover{background:rgba(212,175,55,.1)}
+
+.cierre-resumen{display:none}
+.cierre-resumen.visible{display:block}
+
+.cierre-total-banner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;background:var(--black3);border:2px solid var(--gold);padding:24px 28px;margin-bottom:20px}
+.cierre-total-left{}
+.cierre-total-label{font-size:10px;letter-spacing:2px;color:var(--grey);text-transform:uppercase;margin-bottom:4px}
+.cierre-total-value{font-family:'Bebas Neue',sans-serif;font-size:56px;color:var(--gold);letter-spacing:2px;line-height:1}
+.cierre-total-sub{font-size:12px;color:var(--grey2);margin-top:4px}
+.cierre-dif-label{font-size:10px;letter-spacing:2px;color:var(--grey);text-transform:uppercase;text-align:right;margin-bottom:4px}
+.cierre-dif-value{font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--green);letter-spacing:1px;text-align:right}
+.cierre-dif-value.negativo{color:var(--red)}
+
+.cierre-pagos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:20px}
+.pago-card{background:var(--black3);border:1px solid var(--black5);padding:16px 20px}
+.pago-card.efectivo{border-color:rgba(82,192,122,.4)}
+.pago-card.efectivo .pago-total{color:var(--green)}
+.pago-card.transferencia{border-color:rgba(212,175,55,.3)}
+.pago-card.transferencia .pago-total{color:var(--gold)}
+.pago-name{font-size:10px;letter-spacing:1.5px;color:var(--grey);text-transform:uppercase;margin-bottom:6px}
+.pago-total{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--white);letter-spacing:1px}
+.pago-count{font-size:11px;color:var(--grey2);margin-top:2px;font-family:'JetBrains Mono',monospace}
+
+.cierre-insights{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:20px}
+.insight-card{background:var(--black3);border:1px solid var(--black5);padding:20px 24px}
+.insight-label{font-size:10px;letter-spacing:2px;color:var(--grey);text-transform:uppercase;margin-bottom:10px}
+.insight-main{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);letter-spacing:1px;line-height:1.2;margin-bottom:4px}
+.insight-sub{font-size:12px;color:var(--grey2)}
+
+/* TENDENCIA */
+.tendencia-list{display:flex;flex-direction:column;gap:12px}
+.tendencia-row{background:var(--black4);border:1px solid var(--black5);border-radius:var(--radius);padding:14px 16px}
+.tendencia-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.tendencia-nombre{font-size:13px;color:var(--white);font-weight:500}
+.tendencia-badge{font-size:10px;font-weight:700;padding:2px 10px;border-radius:100px}
+.tendencia-badge.subiendo{background:rgba(82,192,122,.15);color:var(--green);border:1px solid rgba(82,192,122,.3)}
+.tendencia-badge.bajando{background:rgba(224,82,82,.12);color:var(--red);border:1px solid rgba(224,82,82,.25)}
+.tendencia-badge.estable{background:rgba(136,136,136,.1);color:var(--grey);border:1px solid var(--black5)}
+.tendencia-bars{display:flex;gap:3px;align-items:flex-end;height:32px}
+.tendencia-bar-seg{flex:1;background:var(--black5);border-radius:2px;min-height:3px;transition:height .4s}
+.tendencia-bar-seg.activo{background:var(--gold)}
+.tendencia-mes-labels{display:flex;gap:3px;margin-top:3px}
+.tendencia-mes-lbl{flex:1;text-align:center;font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--grey2)}
+
+/* Z TICKET MODAL */
+.z-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;z-index:3000}
+.z-ticket-wrap{display:flex;flex-direction:column;align-items:center;gap:0}
+.z-ticket{width:300px;background:#fff;color:#000;font-family:'Courier Prime','Courier New',monospace;font-size:12px;padding:20px 16px;max-height:82vh;overflow-y:auto}
+.z-ticket-actions{width:300px;display:flex;gap:10px;margin-top:12px}
+
+/* RESPONSIVE */
+@media(max-width:900px){.metrics-strip,.metrics-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){
+  .revenue-strip{grid-template-columns:1fr 1fr}
+  .sidebar{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%);z-index:200}
+  .sidebar.open{transform:translateX(0);box-shadow:4px 0 30px rgba(0,0,0,.8)}
+  .menu-toggle{display:flex}
+  .app{flex-direction:column}.main{width:100%}
+  .topbar{padding:12px 16px}.section{padding:16px}
+  .metrics-strip{grid-template-columns:repeat(2,1fr);gap:8px}
+  .metric-value{font-size:28px}.orders-grid{grid-template-columns:1fr}
+  .filters-bar{flex-direction:column;align-items:flex-start}
+  .filter-tabs{width:100%;overflow-x:auto;flex-wrap:nowrap}.filter-tab{flex-shrink:0}
+  .metrics-grid{grid-template-columns:1fr 1fr}.mbcard-number{font-size:36px}
+  .cierre-total-value{font-size:40px}
+}
+@media(max-width:420px){.revenue-strip{grid-template-columns:1fr}}
+@media(min-width:1400px){.main{max-width:1200px;margin:0 auto}.app{justify-content:center}}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:150}
+.sidebar-overlay.visible{display:block}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@media print{
+  body>*:not(#printModalOverlay){display:none!important}
+  #printModalOverlay{position:static!important;background:none!important;display:block!important}
+  .print-modal-actions{display:none!important}
+  .ticket{box-shadow:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- APP -->
+<div id="app" class="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark"></div>
+      <div class="brand-text"><span class="brand-name">AIMAX</span><span class="brand-sub">Restaurant OS</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" onclick="showSection('orders')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Pedidos</span>
+      </a>
+      <a class="nav-item" onclick="showSection('ventas')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>Ventas</span>
+      </a>
+      <a class="nav-item" onclick="showSection('clientes')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Clientes</span>
+      </a>
+      <a class="nav-item" onclick="showSection('horas')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Por Horas</span>
+      </a>
+      <a class="nav-item" onclick="showSection('metrics')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Métricas</span>
+      </a>
+      <!-- NUEVO: Cierre de Caja -->
+      <a class="nav-item" onclick="showSection('cierre')" style="border:1px solid rgba(212,175,55,.2);margin-top:8px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span>Cierre de Caja</span>
+      </a>
+      <a class="nav-item" onclick="showSection('config')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg><span>Configurar</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sync-status" id="syncStatus"><span class="sync-dot"></span><span class="sync-label">En vivo</span></div>
+      <button class="btn-logout" onclick="handleLogout()">Salir</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" onclick="toggleSidebar()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <div class="page-title" id="pageTitle">Pedidos</div>
+      </div>
+      <div class="topbar-right">
+        <div class="live-badge"><span class="live-dot"></span>LIVE</div>
+        <span class="topbar-time" id="topbarTime">--:--</span>
+      </div>
+    </div>
+
+    <!-- ── ORDERS ── -->
+    <section id="section-orders" class="section active">
+      <div class="metrics-strip" style="grid-template-columns:1fr;margin-bottom:12px">
+        <div class="metric-card" style="background:#0f1a0f;border-color:#1a2e1a;padding:20px 24px;display:flex;align-items:center;gap:16px">
+          <span style="font-size:28px">💵</span>
+          <div>
+            <span class="metric-label" style="font-size:9px;letter-spacing:2px">VENTAS HOY</span>
+            <div class="metric-value" id="revToday" style="font-size:42px;color:#D4AF37;line-height:1.1">$0</div>
+          </div>
+        </div>
+      </div>
+      <div class="metrics-strip">
+        <div class="metric-card"><span class="metric-label">HOY</span><span class="metric-value" id="metricToday" style="color:var(--gold)">0</span><span class="metric-unit">pedidos</span></div>
+        <div class="metric-card"><span class="metric-label">MES</span><span class="metric-value" id="metricMonth" style="color:var(--gold)">0</span><span class="metric-unit">pedidos</span></div>
+        <div class="metric-card highlight"><span class="metric-label">TOP PRODUCTO</span><span class="metric-value small" id="metricTop" style="color:var(--gold)">—</span><span class="metric-unit">más vendido</span></div>
+        <div class="metric-card"><span class="metric-label">ÚLTIMA ACT.</span><span class="metric-value small" id="metricLastUpdate" style="font-family:'JetBrains Mono',monospace;font-size:22px;color:var(--gold)">--:--</span><span class="metric-unit">actualización</span></div>
+      </div>
+      <div class="filters-bar">
+        <div class="filter-tabs">
+          <button class="filter-tab active" onclick="setFilter('day',this)">Hoy</button>
+          <button class="filter-tab" onclick="setFilter('yesterday',this)">Ayer</button>
+          <button class="filter-tab" onclick="setFilter('week',this)">Semana</button>
+          <button class="filter-tab" onclick="setFilter('month',this)">Mes</button>
+          <button class="filter-tab" onclick="setFilter('year',this)">Año</button>
+          <button class="filter-tab" onclick="setFilter('all',this)">Todo</button>
+          <button class="filter-tab" id="filterTabFecha" onclick="toggleDatePicker(this)">📅 Fecha</button>
+        </div>
+        <div id="datePickerWrap" style="display:none;margin-top:8px;display:none;align-items:center;gap:8px;flex-wrap:wrap">
+          <input type="date" id="customDateInput" class="config-input" style="width:160px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="applyCustomDate()"/>
+          <button class="filter-tab" style="border-color:var(--gold3);color:var(--gold)" onclick="clearCustomDate()">✕ Limpiar</button>
+        </div>
+        <div class="filter-right">
+          <span class="orders-count" id="ordersCount">0 pedidos</span>
+          <div class="export-dropdown" id="exportDropdown">
+            <button class="btn-export" onclick="toggleExportMenu()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Exportar</button>
+            <div class="export-menu" id="exportMenu">
+              <button onclick="exportExcel();closeExportMenu()">📊 Descargar Excel</button>
+              <button onclick="exportPDF();closeExportMenu()">📄 Descargar PDF</button>
+            </div>
+          </div>
+          <button class="btn-refresh" onclick="fetchOrders()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+        </div>
+      </div>
+      <div class="orders-grid" id="ordersGrid"><div class="empty-state"><div class="empty-icon">📋</div><p>Cargando pedidos...</p></div></div>
+
+      <!-- AVISO SIN CONEXIÓN SUPABASE -->
+      <div id="noDbBanner" style="display:none;margin-top:20px;background:linear-gradient(135deg,#0d0d0d,#111);border:1px solid rgba(212,175,55,.25);border-left:3px solid var(--gold);padding:20px 24px;border-radius:6px">
+        <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
+          <span style="font-size:28px;line-height:1">⚠️</span>
+          <div style="flex:1;min-width:200px">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--gold);margin-bottom:4px">BASE DE DATOS NO CONECTADA</div>
+            <div style="font-size:13px;color:#aaa;line-height:1.6;margin-bottom:12px">
+              El dashboard no tiene conexión a Supabase. Para ver tus pedidos en tiempo real,
+              <strong style="color:#fff">contáctate con AIMAX</strong> para realizar tu conexión de base de datos.
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <a href="https://wa.me/573000000000" target="_blank"
+                 style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--gold);color:#000;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;border-radius:4px;text-decoration:none;letter-spacing:.5px">
+                💬 Contactar AIMAX
+              </a>
+              <span style="font-size:11px;color:#555">o ve a <strong style="color:#888">Configuración</strong> y pega tus credenciales de Supabase</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── VENTAS ── -->
+    <section id="section-ventas" class="section">
+      <div class="section-header">
+        <h2>Ventas & Ingresos</h2>
+        <div class="section-header-actions">
+          <select id="ventasMesFilter" class="config-input" style="width:auto;padding:6px 12px" onchange="renderVentas()">
+            <option value="month" selected>Este mes</option><option value="day">Hoy</option>
+            <option value="week">Esta semana</option><option value="year">Este año</option><option value="all">Todo</option>
+          </select>
+          <input type="date" id="ventasCustomDate" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace;display:none" onchange="renderVentas()" title="Filtrar ventas por fecha específica"/>
+          <button class="filter-tab" id="ventasDateToggle" style="font-size:11px" onclick="toggleVentasDatePicker()">📅 Fecha</button>
+          <button class="btn-export" onclick="exportVentasExcel()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Excel</button>
+        </div>
+      </div>
+      <div class="metrics-grid" style="margin-bottom:20px">
+        <div class="metrics-big-card"><span class="mbcard-label">💵 Ventas Hoy</span><span class="mbcard-number" id="vToday">$0</span></div>
+        <div class="metrics-big-card"><span class="mbcard-label">📅 Esta Semana</span><span class="mbcard-number" id="vWeek">$0</span></div>
+        <div class="metrics-big-card"><span class="mbcard-label">🗓️ Este Mes</span><span class="mbcard-number" id="vMonth">$0</span></div>
+        <div class="metrics-big-card gold"><span class="mbcard-label">🏆 Este Año</span><span class="mbcard-number" id="vYear">$0</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:20px">
+        <div class="top-products-card"><h3 class="tpc-title">🏠 Comer En El Local</h3><div style="display:flex;align-items:center;gap:16px;margin-top:12px"><div><div class="mbcard-number" id="vLocal" style="font-size:28px">$0</div><div style="font-size:12px;color:#888;margin-top:4px"><span id="vLocalCount">0</span> pedidos</div></div><div class="entrega-badge badge-local" style="font-size:11px;padding:4px 10px">LOCAL</div></div></div>
+        <div class="top-products-card"><h3 class="tpc-title">🛵 Domicilios</h3><div style="display:flex;align-items:center;gap:16px;margin-top:12px"><div><div class="mbcard-number" id="vDom" style="font-size:28px">$0</div><div style="font-size:12px;color:#888;margin-top:4px"><span id="vDomCount">0</span> pedidos</div></div><div class="entrega-badge badge-dom" style="font-size:11px;padding:4px 10px">DOMICILIO</div></div></div>
+        <div class="top-products-card"><h3 class="tpc-title">🏃 Recoger</h3><div style="display:flex;align-items:center;gap:16px;margin-top:12px"><div><div class="mbcard-number" id="vRecoger" style="font-size:28px">$0</div><div style="font-size:12px;color:#888;margin-top:4px"><span id="vRecogerCount">0</span> pedidos</div></div><div class="entrega-badge badge-local" style="font-size:11px;padding:4px 10px">RECOGER</div></div></div>
+      </div>
+      <div class="top-products-card" style="margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+          <h3 class="tpc-title">📦 Más Vendidos</h3>
+          <div class="filter-tabs" style="margin:0">
+            <button class="filter-tab active" onclick="setVentasProductoPeriodo('day',this)">Hoy</button>
+            <button class="filter-tab" onclick="setVentasProductoPeriodo('week',this)">Semana</button>
+            <button class="filter-tab" onclick="setVentasProductoPeriodo('month',this)">Mes</button>
+            <button class="filter-tab" onclick="setVentasProductoPeriodo('all',this)">Todo</button>
+          </div>
+        </div>
+        <div id="ventasProductoList" class="top-products-list"></div>
+      </div>
+      <!-- MENOS VENDIDOS -->
+      <div class="top-products-card" style="margin-bottom:20px;border-color:#2a1a1a">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+          <h3 class="tpc-title" style="color:#e05252">📉 Menos Vendidos</h3>
+          <span style="font-size:11px;color:#666">Mismo período — los que necesitan atención</span>
+        </div>
+        <div id="menosVendidosList" class="top-products-list"></div>
+      </div>
+      <div class="top-products-card">
+        <h3 class="tpc-title" style="margin-bottom:16px">📈 Comparación Mes a Mes</h3>
+        <div id="mesAMesChart"></div>
+      </div>
+    </section>
+
+    <!-- ── CLIENTES ── -->
+    <section id="section-clientes" class="section">
+      <div class="section-header">
+        <h2>Análisis de Clientes</h2>
+        <input type="text" id="clienteSearch" class="config-input" style="width:220px;padding:6px 12px" placeholder="🔍 Buscar cliente..." oninput="renderClientes()">
+      </div>
+      <div class="metrics-grid" style="margin-bottom:20px">
+        <div class="metrics-big-card"><span class="mbcard-label">👥 Clientes Únicos</span><span class="mbcard-number" id="cUnicos">0</span></div>
+        <div class="metrics-big-card"><span class="mbcard-label">🔄 Clientes Frecuentes</span><span class="mbcard-number" id="cFrecuentes">0</span><span style="font-size:11px;color:#888">2+ pedidos</span></div>
+        <div class="metrics-big-card"><span class="mbcard-label">💰 Ticket Promedio</span><span class="mbcard-number" id="cTicketProm">$0</span></div>
+        <div class="metrics-big-card gold"><span class="mbcard-label">📆 Frecuencia Promedio</span><span class="mbcard-number" id="cFrecProm">—</span><span style="font-size:11px;color:#888">días entre compras</span></div>
+      </div>
+      <div class="top-products-card"><h3 class="tpc-title" style="margin-bottom:14px">Detalle por Cliente</h3><div id="clientesTable"></div></div>
+    </section>
+
+    <!-- ── HORAS ── -->
+    <section id="section-horas" class="section">
+      <div class="section-header"><h2>Análisis por Horas</h2></div>
+      <div class="top-products-card" style="margin-bottom:20px">
+        <h3 class="tpc-title" style="margin-bottom:14px">⏱️ Ventas en Rango de Hora</h3>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div><label class="login-label" style="display:block;margin-bottom:4px">DESDE</label><input type="time" id="rangoDesde" class="config-input" style="width:130px" value="00:00" oninput="renderRangoHorario()"></div>
+          <div><label class="login-label" style="display:block;margin-bottom:4px">HASTA</label><input type="time" id="rangoHasta" class="config-input" style="width:130px" value="23:59" oninput="renderRangoHorario()"></div>
+          <div style="flex:1;min-width:120px"><label class="login-label" style="display:block;margin-bottom:4px">PERÍODO</label><select id="rangoPeriodo" class="config-input" style="width:auto;padding:6px 12px" onchange="renderRangoHorario()"><option value="day">Hoy</option><option value="week">Esta semana</option><option value="month">Este mes</option><option value="all">Todo</option></select></div>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:20px;flex-wrap:wrap">
+          <div class="metrics-big-card" style="flex:1;min-width:140px"><span class="mbcard-label">Pedidos en rango</span><span class="mbcard-number" id="rangoPedidos">0</span></div>
+          <div class="metrics-big-card gold" style="flex:1;min-width:140px"><span class="mbcard-label">Ventas en rango</span><span class="mbcard-number" id="rangoVentas">$0</span></div>
+        </div>
+      </div>
+      <div class="top-products-card" style="margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+          <h3 class="tpc-title">🕐 Pedidos por Hora del Día</h3>
+          <div class="filter-tabs" style="margin:0">
+            <button class="filter-tab active" onclick="setHorasPeriodo('day',this)">Hoy</button>
+            <button class="filter-tab" onclick="setHorasPeriodo('week',this)">Semana</button>
+            <button class="filter-tab" onclick="setHorasPeriodo('month',this)">Mes</button>
+            <button class="filter-tab" onclick="setHorasPeriodo('all',this)">Todo</button>
+          </div>
+        </div>
+        <div id="horasChart"></div>
+      </div>
+      <div class="top-products-card"><h3 class="tpc-title" style="margin-bottom:16px">📊 Horas × Día de la Semana</h3><div id="horasDiaChart"></div></div>
+    </section>
+
+    <!-- ── METRICS ── -->
+    <section id="section-metrics" class="section">
+      <div class="section-header"><h2>Métricas de Pedidos</h2></div>
+      <div class="metrics-grid">
+        <div class="metrics-big-card"><span class="mbcard-label">Pedidos Hoy</span><span class="mbcard-number" id="m2Today">0</span></div>
+        <div class="metrics-big-card"><span class="mbcard-label">Pedidos Esta Semana</span><span class="mbcard-number" id="m2Week">0</span></div>
+        <div class="metrics-big-card"><span class="mbcard-label">Pedidos Este Mes</span><span class="mbcard-number" id="m2Month">0</span></div>
+        <div class="metrics-big-card gold"><span class="mbcard-label">Total del Año</span><span class="mbcard-number" id="m2Year">0</span></div>
+      </div>
+      <div class="top-products-card" style="margin-bottom:20px"><h3 class="tpc-title">🏆 Top Productos (todo el período)</h3><div id="topProductsList" class="top-products-list"><p style="color:#555;font-size:13px">Sin datos disponibles</p></div></div>
+      <!-- MENOS VENDIDOS EN MÉTRICAS -->
+      <div class="top-products-card" style="border-color:#2a1a1a"><h3 class="tpc-title" style="color:#e05252">📉 Productos Menos Vendidos</h3><div id="bottomProductsList" class="top-products-list"><p style="color:#555;font-size:13px">Sin datos disponibles</p></div></div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         ── CIERRE DE CAJA ──
+    ══════════════════════════════════════ -->
+    <section id="section-cierre" class="section">
+      <div class="cierre-topbar">
+        <div class="cierre-topbar-title">🏦 Cierre de Caja — Saque Z</div>
+        <div class="cierre-topbar-sub">Resumen diario de ventas · Efectivo y transferencias por banco</div>
+        <div class="cierre-fecha-badge" id="cierreFechaHoy">—</div>
+      </div>
+
+      <!-- BASE DE CAJA -->
+      <div class="cierre-base-row">
+        <div style="flex:1;min-width:200px">
+          <div class="cierre-base-label">💰 Base de caja (apertura)</div>
+          <input type="text" id="cierreBaseInput" class="cierre-base-input" placeholder="$0" oninput="formatBaseInput(this)"/>
+        </div>
+        <!-- FILTRO HOY / AYER -->
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="cierre-base-label">📅 Período</div>
+          <div class="filter-tabs" style="margin:0">
+            <button class="filter-tab active" id="cierreTabHoy" onclick="setCierrePeriodo('day',this)">Hoy</button>
+            <button class="filter-tab" id="cierreTabAyer" onclick="setCierrePeriodo('yesterday',this)">Ayer</button>
+            <button class="filter-tab" id="cierreTabFecha" onclick="toggleCierreDatePicker(this)">📅 Fecha</button>
+          </div>
+          <div id="cierreDatePickerWrap" style="display:none;margin-top:6px">
+            <input type="date" id="cierreCustomDate" class="config-input" style="width:160px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="applyCierreCustomDate()"/>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+          <button class="btn-sacar-z" onclick="sacarZ()">🖨️ SACAR Z</button>
+          <button class="btn-imprimir-z" onclick="imprimirTicketZ()">Imprimir Cierre</button>
+        </div>
+      </div>
+
+      <!-- RESUMEN Z (oculto hasta que se presione) -->
+      <div class="cierre-resumen" id="cierreResumen">
+
+        <!-- TOTAL DEL DÍA -->
+        <div class="cierre-total-banner">
+          <div class="cierre-total-left">
+            <div class="cierre-total-label">Total Ventas del Día</div>
+            <div class="cierre-total-value" id="cierreTotalDia">$0</div>
+            <div class="cierre-total-sub" id="cierrePedidosSub">0 pedidos · Ticket prom: $0</div>
+          </div>
+          <div>
+            <div class="cierre-dif-label">Diferencia de Caja</div>
+            <div class="cierre-dif-value" id="cierreDiferencia">—</div>
+            <div style="font-size:11px;color:#555;margin-top:2px;text-align:right">ventas − base</div>
+          </div>
+        </div>
+
+        <!-- MEDIOS DE PAGO -->
+        <div class="top-products-card" style="margin-bottom:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+            <h3 class="tpc-title" style="margin-bottom:0">💳 Por Medio de Pago</h3>
+            <div style="display:flex;gap:20px;font-size:12px;color:#888">
+              <span>💵 Efectivo total: <strong id="sumEfectivo" style="color:#52c07a">$0</strong></span>
+              <span>🏦 Transferencias: <strong id="sumTransf" style="color:#D4AF37">$0</strong></span>
+            </div>
+          </div>
+          <div class="cierre-pagos-grid" id="cierrePagosGrid"></div>
+        </div>
+
+        <!-- INSIGHTS -->
+        <div class="cierre-insights" style="margin-bottom:20px">
+          <div class="insight-card">
+            <div class="insight-label">👑 Cliente que más compra hoy</div>
+            <div class="insight-main" id="topClienteHoy">—</div>
+            <div class="insight-sub" id="topClienteHoySub"></div>
+          </div>
+          <div class="insight-card">
+            <div class="insight-label">🏆 Producto más vendido hoy</div>
+            <div class="insight-main" id="topProdHoy">—</div>
+            <div class="insight-sub" id="topProdHoySub"></div>
+          </div>
+          <div class="insight-card">
+            <div class="insight-label">📉 Producto menos vendido hoy</div>
+            <div class="insight-main" id="bottomProdHoy" style="color:var(--red)">—</div>
+            <div class="insight-sub" id="bottomProdHoySub"></div>
+          </div>
+          <div class="insight-card">
+            <div class="insight-label">📦 Entregas del día</div>
+            <div class="insight-main" id="entregasHoy">—</div>
+            <div class="insight-sub" id="entregasHoySub"></div>
+          </div>
+        </div>
+
+        <!-- DIARIO DE VENTAS — TODOS LOS PLATOS -->
+        <div class="top-products-card" style="margin-bottom:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+            <h3 class="tpc-title" style="margin-bottom:0">🍔 Diario de Ventas — Todos los Platos</h3>
+            <span style="font-size:11px;color:#666">Cada artículo vendido en el período · igual al ticket Z</span>
+          </div>
+          <div style="overflow-x:auto">
+            <table id="cierrePlatosTable" style="width:100%;border-collapse:collapse;font-size:13px">
+              <thead>
+                <tr>
+                  <th style="background:#1a1a1a;color:#888;font-size:10px;padding:8px 12px;text-align:left;font-weight:600;letter-spacing:1px;border-bottom:1px solid #242424">ARTÍCULO</th>
+                  <th style="background:#1a1a1a;color:#888;font-size:10px;padding:8px 12px;text-align:center;font-weight:600;letter-spacing:1px;border-bottom:1px solid #242424">CANT.</th>
+                  <th style="background:#1a1a1a;color:#888;font-size:10px;padding:8px 12px;text-align:right;font-weight:600;letter-spacing:1px;border-bottom:1px solid #242424">IMPORTE</th>
+                </tr>
+              </thead>
+              <tbody id="cierrePlatosBody">
+                <tr><td colspan="3" style="padding:20px;text-align:center;color:#555">Presiona SACAR Z para ver el detalle</td></tr>
+              </tbody>
+              <tfoot id="cierrePlatosFoot"></tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- TODOS LOS PLATOS VENDIDOS -->
+        <div class="top-products-card" style="margin-bottom:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:4px">
+            <h3 class="tpc-title" style="margin-bottom:0">🍽️ Todos los Platos Vendidos</h3>
+            <span style="font-size:11px;color:#666">Completo · del primero al último</span>
+          </div>
+          <div id="cierrePlatosVendidos"></div>
+        </div>
+
+        <!-- TENDENCIA MES A MES POR PRODUCTO -->
+        <div class="top-products-card" style="margin-bottom:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+            <h3 class="tpc-title" style="margin-bottom:0">📈 Tendencia Productos (mes a mes)</h3>
+            <span style="font-size:11px;color:#666">Últimos 4 meses · ↑ subiendo ↓ bajando</span>
+          </div>
+          <div class="tendencia-list" id="tendenciaList"></div>
+        </div>
+
+        <!-- MENOS VENDIDOS MES A MES -->
+        <div class="top-products-card" style="border-color:#2a1a1a">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+            <h3 class="tpc-title" style="margin-bottom:0;color:#e05252">📉 Productos con Bajo Movimiento</h3>
+            <span style="font-size:11px;color:#666">Los que menos se venden en el período</span>
+          </div>
+          <div class="tendencia-list" id="menosTendenciaList"></div>
+        </div>
+
+      </div><!-- /cierre-resumen -->
+    </section>
+
+    <!-- ── CONFIG ── -->
+    <section id="section-config" class="section">
+      <div class="section-header"><h2>Configuración</h2></div>
+      <div class="config-card">
+        <h3 class="config-section-title">🟢 Conexión a Supabase</h3>
+        <p class="config-desc">Pega las credenciales de tu proyecto Supabase:</p>
+        <label class="login-label" style="display:block;margin-bottom:6px;margin-top:4px">PROJECT URL</label>
+        <input type="text" id="supabaseUrlInput" class="config-input" placeholder="https://xxxxxxxxxxxx.supabase.co"/>
+        <label class="login-label" style="display:block;margin-bottom:6px;margin-top:12px">ANON PUBLIC KEY</label>
+        <input type="text" id="supabaseKeyInput" class="config-input" placeholder="eyJ..."/>
+        <label class="login-label" style="display:block;margin-bottom:6px;margin-top:12px">NOMBRE DE LA TABLA</label>
+        <input type="text" id="supabaseTableInput" class="config-input" placeholder="pedidos"/>
+        <button class="btn-config-save" style="margin-top:14px" onclick="saveSupabaseConfig()">💾 Guardar y Conectar</button>
+        <p class="config-msg" id="supabaseMsg"></p>
+        <div class="config-info" style="margin-top:16px">
+          <strong>Columnas requeridas:</strong><br>
+          <code>id · fecha · hora · cliente · telefono · pedido · entrega · direccion · pago · total · extras · efectivo</code>
+        </div>
+      </div>
+      <div class="config-card">
+        <h3 class="config-section-title">🔐 Cambiar Contraseña</h3>
+        <input type="password" id="newPassInput" class="config-input" placeholder="Nueva contraseña"/>
+        <input type="password" id="newPassConfirm" class="config-input" placeholder="Confirmar contraseña" style="margin-top:10px"/>
+        <button class="btn-config-save" onclick="changePassword()">Cambiar Contraseña</button>
+        <p class="config-msg" id="passMsg"></p>
+      </div>
+      <div class="config-card">
+        <h3 class="config-section-title">⚙️ Nombre del Restaurante</h3>
+        <input type="text" id="restaurantNameInput" class="config-input" placeholder="Nombre del restaurante"/>
+        <button class="btn-config-save" onclick="saveRestaurantName()">Guardar Nombre</button>
+      </div>
+      <div class="config-card">
+        <h3 class="config-section-title">🍽️ Catálogo de Platos</h3>
+        <p class="config-desc">Pega aquí todos los platos del menú (uno por línea). Así "Todos los Platos Vendidos" mostrará también los que no se han vendido con <strong style="color:#e05252">0 ventas</strong>.</p>
+        <textarea id="catalogoInput" class="config-input" rows="10" placeholder="Chuzo Kosiaka&#10;Hamburguesa Americana&#10;Detodito&#10;Antojo&#10;..." style="font-family:'JetBrains Mono',monospace;font-size:12px;resize:vertical;line-height:1.8"></textarea>
+        <button class="btn-config-save" style="margin-top:12px" onclick="saveCatalogo()">💾 Guardar Catálogo</button>
+        <p class="config-msg" id="catalogoMsg"></p>
+        <div class="config-info" style="margin-top:12px">
+          <strong>Tip:</strong> Un plato por línea. Así el Cierre de Caja mostrará <em>todos</em> los platos, incluyendo los que no se vendieron ese día (en gris con 0).
+        </div>
+      </div>
+      <div class="config-card">
+        <h3 class="config-section-title">🖨️ Tamaño de Ticket</h3>
+        <div class="ticket-size-selector" id="ticketSizeSelector">
+          <div class="ticket-size-option" data-width="220" data-font="11" onclick="selectTicketSize(this)"><div class="tso-label">58 mm</div><div class="tso-sub">Mini<br><span>220px · 11px</span></div></div>
+          <div class="ticket-size-option" data-width="300" data-font="13" onclick="selectTicketSize(this)"><div class="tso-label">80 mm</div><div class="tso-sub">Estándar<br><span>300px · 13px</span></div></div>
+          <div class="ticket-size-option" data-width="360" data-font="14" onclick="selectTicketSize(this)"><div class="tso-label">110 mm</div><div class="tso-sub">Grande<br><span>360px · 14px</span></div></div>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:120px"><label class="login-label" style="display:block;margin-bottom:6px">ANCHO (px)</label><input type="number" id="ticketWidthInput" class="config-input" placeholder="300" min="150" max="600"/></div>
+          <div style="flex:1;min-width:120px"><label class="login-label" style="display:block;margin-bottom:6px">FUENTE (px)</label><input type="number" id="ticketFontInput" class="config-input" placeholder="13" min="8" max="20"/></div>
+        </div>
+        <button class="btn-config-save" style="margin-top:14px" onclick="saveTicketSize()">Guardar Configuración</button>
+        <p class="config-msg" id="ticketSizeMsg"></p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- PRINT MODAL -->
+<div id="printModalOverlay" class="print-modal-overlay hidden">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:0">
+    <div id="ticketContainer" class="ticket"></div>
+    <div class="print-modal-actions" style="width:300px">
+      <button onclick="window.print()" class="btn-action btn-print-now">🖨️ Imprimir</button>
+      <button onclick="closePrintModal()" class="btn-action btn-close-modal">✕ Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Z TICKET MODAL -->
+<div id="zModalOverlay" class="z-modal-overlay hidden">
+  <div class="z-ticket-wrap">
+    <div id="zTicketContent" class="z-ticket"></div>
+    <div class="z-ticket-actions">
+      <button onclick="window.print()" class="btn-action btn-print-now">🖨️ Imprimir</button>
+      <button onclick="document.getElementById('zModalOverlay').classList.add('hidden')" class="btn-action btn-close-modal">✕ Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* ═══════════════════════════════════════════
+   AIMAX — Dashboard v3.0 — Cierre de Caja
+═══════════════════════════════════════════ */
+// Leer credenciales desde sessionStorage (inyectadas por index.html al hacer login)
+// Fallback a localStorage para persistencia entre recargas
+const CONFIG = {
+  supabaseUrl:    sessionStorage.getItem('aimax_sb_url')    || localStorage.getItem('aimax_sb_url')    || '',
+  supabaseKey:    sessionStorage.getItem('aimax_sb_key')    || localStorage.getItem('aimax_sb_key')    || '',
+  supabaseTable:  sessionStorage.getItem('aimax_sb_table')  || localStorage.getItem('aimax_sb_table')  || 'pedidos',
+  restaurantName: sessionStorage.getItem('aimax_name')      || localStorage.getItem('aimax_name')      || 'Mi Restaurante',
+  refreshInterval: 15000,
+};
+
+// Guardar en localStorage para sobrevivir recargas
+if(CONFIG.supabaseUrl) {
+  localStorage.setItem('aimax_sb_url', CONFIG.supabaseUrl);
+  localStorage.setItem('aimax_sb_key', CONFIG.supabaseKey);
+  localStorage.setItem('aimax_sb_table', CONFIG.supabaseTable);
+  localStorage.setItem('aimax_name', CONFIG.restaurantName);
+}
+
+// Si no hay sesión activa, redirigir al login
+if(!CONFIG.supabaseUrl || !CONFIG.supabaseKey){
+  window.location.href='index.html';
+}
+
+let allOrders = [], currentFilter = 'day', refreshTimer = null, isLoggedIn = true;
+let ventasProductoPeriodo = 'day', horasPeriodo = 'day';
+
+/* ── AUTH ── */
+function handleLogout() {
+  isLoggedIn=false; clearInterval(refreshTimer);
+  sessionStorage.clear();
+  window.location.href='index.html';
+}
+
+function initApp() {
+  updateClock(); setInterval(updateClock,1000);
+  const urlInp=document.getElementById('supabaseUrlInput');
+  const keyInp=document.getElementById('supabaseKeyInput');
+  const tblInp=document.getElementById('supabaseTableInput');
+  const nameInp=document.getElementById('restaurantNameInput');
+  if(urlInp) urlInp.value=CONFIG.supabaseUrl;
+  if(keyInp) keyInp.value=CONFIG.supabaseKey;
+  if(tblInp) tblInp.value=CONFIG.supabaseTable;
+  if(nameInp) nameInp.value=CONFIG.restaurantName;
+  const cat=localStorage.getItem('aimax_catalogo');
+  if(cat){try{const arr=JSON.parse(cat);const ci=document.getElementById('catalogoInput');if(ci)ci.value=arr.join('\n');}catch{}}
+  loadTicketSizeUI();
+  actualizarFechaCierre();
+  fetchOrders();
+  refreshTimer=setInterval(fetchOrders,CONFIG.refreshInterval);
+}
+function actualizarFechaCierre() {
+  const el=document.getElementById('cierreFechaHoy');
+  if(el) el.textContent=new Date().toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
+
+/* ── CLOCK ── */
+function updateClock(){
+  const n=new Date();
+  document.getElementById('topbarTime').textContent=
+    `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}`;
+}
+
+/* ── FETCH ── */
+async function fetchOrders(){
+  const btn=document.querySelector('.btn-refresh');
+  if(btn) btn.classList.add('spinning');
+  if(!CONFIG.supabaseUrl||!CONFIG.supabaseKey){
+    showNoDbBanner(true);
+    useDemoData();
+    if(btn)btn.classList.remove('spinning');
+    return;
+  }
+  showNoDbBanner(false);
+  try {
+    const url=`${CONFIG.supabaseUrl}/rest/v1/${CONFIG.supabaseTable||'pedidos'}?select=*&order=Fecha.desc&limit=5000`;
+    const res=await fetch(url,{headers:{'apikey':CONFIG.supabaseKey,'Authorization':`Bearer ${CONFIG.supabaseKey}`,'Content-Type':'application/json'}});
+    if(!res.ok) throw new Error(res.status);
+    const rows=await res.json();
+    allOrders=rows.map((r,i)=>parseSupabaseRow(r,i));
+    renderOrders();updateMetrics();updateRevenueStrip();updateLastSync();setSyncOk();
+    showNoDbBanner(false);
+    // Actualizar mensaje de conexión con total real de pedidos
+    const sbMsg=document.getElementById('supabaseMsg');
+    if(sbMsg) { sbMsg.style.color='#52c07a'; sbMsg.textContent=`✓ Conectado — ${allOrders.length} pedido${allOrders.length!==1?'s':''} cargado${allOrders.length!==1?'s':''}`; }
+  } catch(e){
+    setSyncError();showNoDbBanner(true);
+    const sbMsg=document.getElementById('supabaseMsg');
+    if(sbMsg){ sbMsg.style.color='#e05252'; sbMsg.textContent='✗ Error de conexión. Verifica la URL y la API Key.'; }
+    if(!allOrders.length) useDemoData();
+  }
+  if(btn) btn.classList.remove('spinning');
+}
+function showNoDbBanner(show){
+  const b=document.getElementById('noDbBanner');
+  if(b) b.style.display=show?'block':'none';
+}
+
+function parseSupabaseRow(row,idx){
+  const fechaRaw=row.Fecha||row.fecha||'';
+  const cliente=row.Nombre||row.cliente||'Cliente sin nombre';
+  const telefono=row.Telefono||row.telefono||'';
+  const pedido=row.Platos||row.pedido||'';
+  const entregaRaw=row.Entrega||row.entrega||'';
+  const entrega=entregaRaw.toLowerCase()==='comer'?'Comer en el local':entregaRaw.toLowerCase()==='local'?'Recoger en el local':entregaRaw;
+  const direccion=row.Direccion||row.direccion||'';
+  const pago=row.Pago||row.pago||'';
+  const total=row.Total||row.total||'';
+  const extras=row.Extras||row.extras||'';
+  const efectivo=row.Efectivo||row.efectivo||'';
+  let hora=row.hora||'';
+  const hm=fechaRaw.match(/(\d{1,2}:\d{2}(:\d{2})?)/);
+  if(hm&&!hora) hora=hm[1];
+  const fecha=fechaRaw.replace(/\s+\d{1,2}:\d{2}(:\d{2})?/,'').trim();
+  const dateObj=parseDate(fechaRaw,hora);
+  return{id:`order-${row.id||idx+1}`,index:row.id||idx+1,fecha,hora,cliente,telefono,pedido,entrega,direccion,pago,total,extras,efectivo,dateObj,items:parseItems(pedido)};
+}
+function parseDate(fecha,hora){
+  if(!fecha) return new Date();
+  const p=fecha.trim().split(' ');
+  const fp=p[0]; const hp=(p[1]||hora||'00:00:00').split(':').map(x=>x.padStart(2,'0')).join(':');
+  const f=fp.split('/');
+  if(f.length===3){
+    const d=new Date(`${f[2].padStart(4,'0')}-${f[1].padStart(2,'0')}-${f[0].padStart(2,'0')}T${hp.split(':').length===2?hp+':00':hp}`);
+    if(!isNaN(d)) return d;
+  }
+  return new Date(0);
+}
+function parseItems(p){
+  if(!p) return [];
+  return p.split(/[,\n]/).map(s=>s.trim().replace(/^[•\-\*]+\s*/,'')).filter(Boolean);
+}
+function parseTotal(s){
+  if(!s) return 0;
+  const n=parseFloat(String(s).replace(/[^0-9]/g,''));
+  return isNaN(n)?0:n;
+}
+function formatMoney(n){
+  if(n>=1000000) return '$'+(n/1000000).toFixed(1)+'M';
+  if(n>=1000) return '$'+Math.round(n).toLocaleString('es-CO');
+  return '$'+Math.round(n);
+}
+
+/* ── DEMO DATA ── */
+function useDemoData(){
+  const now=new Date();
+  const fmt=d=>`${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+  const fmtT=d=>`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  const demos=[
+    {cliente:'María García',telefono:'3001234567',pedido:'2x Hamburguesa Clásica, 1x Papas Grandes, 2x Coca Cola',entrega:'Domicilio',direccion:'Calle 45 #12-30',pago:'Bancolombia',total:'$85.000'},
+    {cliente:'Juan Rodríguez',telefono:'3109876543',pedido:'1x Pizza Pepperoni, 1x Ensalada César',entrega:'Recoger en el local',direccion:'',pago:'Efectivo',total:'$52.000'},
+    {cliente:'Ana López',telefono:'3205556677',pedido:'3x Alitas BBQ, 1x Cerveza',entrega:'Domicilio',direccion:'Carrera 8 #22-10',pago:'Nequi',total:'$43.000'},
+    {cliente:'Carlos Mendez',telefono:'3114443322',pedido:'1x Combo Familiar, 4x Refresco',entrega:'Comer en el local',direccion:'',pago:'Efectivo',total:'$120.000'},
+    {cliente:'Laura Sánchez',telefono:'3187776655',pedido:'2x Taco de Res, 1x Burrito, 1x Agua',entrega:'Domicilio',direccion:'Av. 30 #5-20',pago:'Daviplata',total:'$31.000'},
+    {cliente:'Roberto Kim',telefono:'3002221133',pedido:'1x Hamburguesa BBQ Doble, 1x Papas Gajo, 1x Limonada',entrega:'Recoger en el local',direccion:'',pago:'Bancolombia',total:'$49.000'},
+    {cliente:'María García',telefono:'3001234567',pedido:'1x Hamburguesa Clásica, 1x Coca Cola',entrega:'Domicilio',direccion:'Calle 45 #12-30',pago:'Bancolombia',total:'$38.000'},
+    {cliente:'Juan Rodríguez',telefono:'3109876543',pedido:'2x Pizza Pepperoni, 2x Cerveza',entrega:'Comer en el local',direccion:'',pago:'Efectivo',total:'$78.000'},
+    {cliente:'Sofía Torres',telefono:'3156789012',pedido:'1x Ensalada César, 1x Jugo Natural, 1x Brownie',entrega:'Comer en el local',direccion:'',pago:'Tarjeta',total:'$42.000'},
+    {cliente:'Pedro Vargas',telefono:'3223334455',pedido:'2x Hamburguesa Clásica, 2x Papas Grandes',entrega:'Domicilio',direccion:'Carrera 15 #80-20',pago:'Nequi',total:'$64.000'},
+    {cliente:'María García',telefono:'3001234567',pedido:'3x Alitas BBQ, 2x Refresco',entrega:'Domicilio',direccion:'Calle 45 #12-30',pago:'Bancolombia',total:'$55.000'},
+    {cliente:'Carlos Mendez',telefono:'3114443322',pedido:'1x Combo Familiar, 2x Refresco, 1x Postre',entrega:'Comer en el local',direccion:'',pago:'Efectivo',total:'$135.000'},
+  ];
+  const daysBack=[0,0,0,0,1,1,2,3,5,7,14,30];
+  const hours=[12,13,19,20,11,21,14,18,12,20,13,19];
+  allOrders=demos.map((d,i)=>{
+    const dt=new Date(now);
+    dt.setDate(dt.getDate()-daysBack[i]);
+    dt.setHours(hours[i],Math.floor(Math.random()*60),0,0);
+    return{id:`order-${i+1}`,index:i+1,fecha:fmt(dt),hora:fmtT(dt),cliente:d.cliente,telefono:d.telefono,pedido:d.pedido,entrega:d.entrega,direccion:d.direccion,pago:d.pago,total:d.total,extras:'',efectivo:'',dateObj:dt,items:parseItems(d.pedido)};
+  });
+  renderOrders();updateMetrics();updateRevenueStrip();updateLastSync();setSyncOk();
+  if(!window._demoWarned){window._demoWarned=true;console.info('AIMAX: Demo data');}
+}
+
+/* ── FILTERS ── */
+let customDateFilter = null; // 'YYYY-MM-DD' string when active
+
+function setFilter(f,btn){
+  currentFilter=f;
+  customDateFilter=null;
+  document.getElementById('datePickerWrap').style.display='none';
+  document.querySelectorAll('.filter-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderOrders();
+}
+
+function toggleDatePicker(btn){
+  const wrap=document.getElementById('datePickerWrap');
+  const isOpen = wrap.style.display==='flex';
+  if(isOpen){
+    clearCustomDate();
+  } else {
+    wrap.style.display='flex';
+    document.querySelectorAll('.filter-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    // Pre-fill with today's date
+    const today=new Date();
+    document.getElementById('customDateInput').value=today.toISOString().split('T')[0];
+    applyCustomDate();
+  }
+}
+
+function applyCustomDate(){
+  const val=document.getElementById('customDateInput').value;
+  if(!val) return;
+  customDateFilter=val;
+  currentFilter='custom';
+  renderOrders();
+}
+
+function clearCustomDate(){
+  customDateFilter=null;
+  document.getElementById('datePickerWrap').style.display='none';
+  document.getElementById('customDateInput').value='';
+  currentFilter='day';
+  document.querySelectorAll('#section-orders .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelector('#section-orders .filter-tab').classList.add('active');
+  renderOrders();
+}
+
+function toggleVentasDatePicker(){
+  const inp=document.getElementById('ventasCustomDate');
+  const sel=document.getElementById('ventasMesFilter');
+  const isOpen = inp.style.display!=='none';
+  if(isOpen){
+    inp.style.display='none';
+    sel.style.display='';
+    inp.value='';
+    renderVentas();
+  } else {
+    inp.style.display='';
+    sel.style.display='none';
+    const today=new Date();
+    inp.value=today.toISOString().split('T')[0];
+    renderVentas();
+  }
+}
+
+function toggleCierreDatePicker(btn){
+  const wrap=document.getElementById('cierreDatePickerWrap');
+  const isOpen = wrap.style.display!=='none';
+  if(isOpen){
+    wrap.style.display='none';
+    document.querySelectorAll('#section-cierre .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
+    document.getElementById('cierreTabHoy').classList.add('active');
+    cierrePeriodo='day';
+    actualizarFechaCierre();
+  } else {
+    wrap.style.display='block';
+    document.querySelectorAll('#section-cierre .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const today=new Date();
+    document.getElementById('cierreCustomDate').value=today.toISOString().split('T')[0];
+    applyCierreCustomDate();
+  }
+}
+
+function applyCierreCustomDate(){
+  const val=document.getElementById('cierreCustomDate').value;
+  if(!val) return;
+  cierrePeriodo='custom_date:'+val;
+  const d=new Date(val+'T00:00:00');
+  const el=document.getElementById('cierreFechaHoy');
+  if(el) el.textContent=d.toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
+
+// El día operativo arranca a las 3:00 AM. Si son las 0:00–2:59 AM, aún es "ayer".
+function getOperationalDay(date){
+  const d=date||new Date();
+  if(d.getHours()<3) return new Date(d.getFullYear(),d.getMonth(),d.getDate()-1);
+  return new Date(d.getFullYear(),d.getMonth(),d.getDate());
+}
+
+function filterOrders(orders,period){
+  const p=period||currentFilter;
+  const now=new Date();
+  const opDay=getOperationalDay(now);
+  const todayStart=new Date(opDay.getFullYear(),opDay.getMonth(),opDay.getDate(),3,0,0);
+
+  // Custom single date (from date picker in Orders section)
+  if(p==='custom'){
+    if(!customDateFilter) return orders;
+    const [yr,mo,dy]=customDateFilter.split('-').map(Number);
+    const start=new Date(yr,mo-1,dy,3,0,0);
+    const end=new Date(yr,mo-1,dy+1,3,0,0);
+    return orders.filter(o=>o.dateObj>=start&&o.dateObj<end);
+  }
+
+  // Custom date passed as 'custom_date:YYYY-MM-DD' string (Cierre & Ventas)
+  if(p&&p.startsWith('custom_date:')){
+    const dateStr=p.replace('custom_date:','');
+    const [yr,mo,dy]=dateStr.split('-').map(Number);
+    const start=new Date(yr,mo-1,dy,3,0,0);
+    const end=new Date(yr,mo-1,dy+1,3,0,0);
+    return orders.filter(o=>o.dateObj>=start&&o.dateObj<end);
+  }
+
+  switch(p){
+    case 'day':
+      return orders.filter(o=>o.dateObj>=todayStart);
+    case 'yesterday': {
+      const yStart=new Date(todayStart.getTime()); yStart.setDate(yStart.getDate()-1);
+      return orders.filter(o=>o.dateObj>=yStart&&o.dateObj<todayStart);
+    }
+    case 'week': {
+      const ws=new Date(todayStart.getTime()); ws.setDate(ws.getDate()-opDay.getDay());
+      return orders.filter(o=>o.dateObj>=ws);
+    }
+    case 'month':
+      return orders.filter(o=>o.dateObj>=new Date(opDay.getFullYear(),opDay.getMonth(),1,3,0,0));
+    case 'year':
+      return orders.filter(o=>o.dateObj>=new Date(opDay.getFullYear(),0,1,3,0,0));
+    default:
+      return orders;
+  }
+}
+
+/* ── REVENUE STRIP ── */
+function updateRevenueStrip(){
+  const t=filterOrders(allOrders,'day').reduce((a,o)=>a+parseTotal(o.total),0);
+  const el=document.getElementById('revToday');
+  if(el) el.textContent=formatMoney(t);
+}
+
+/* ── RENDER ORDERS ── */
+function renderOrders(){
+  const grid=document.getElementById('ordersGrid');
+  const filtered=filterOrders(allOrders);
+  document.getElementById('ordersCount').textContent=`${filtered.length} pedido${filtered.length!==1?'s':''}`;
+  if(!filtered.length){grid.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><p>No hay pedidos en este período</p></div>';return;}
+  grid.innerHTML=[...filtered].sort((a,b)=>b.dateObj-a.dateObj).map(o=>createOrderCard(o)).join('');
+}
+function createOrderCard(order){
+  const itemsHtml=order.items.length>0?order.items.map(i=>`<div class="order-item-line">• ${escHtml(i)}</div>`).join(''):`<div class="order-item-line">${escHtml(order.pedido||'—')}</div>`;
+  const badge=order.entrega?`<span class="entrega-badge ${order.entrega.toLowerCase().includes('dom')?'badge-dom':'badge-local'}">${escHtml(order.entrega)}</span>`:'';
+  const pd=encodeURIComponent(JSON.stringify({id:order.id,index:order.index,cliente:order.cliente,telefono:order.telefono,fecha:order.fecha,hora:order.hora,pedido:order.pedido,items:order.items,entrega:order.entrega,direccion:order.direccion,pago:order.pago,extras:order.extras,total:order.total,efectivo:order.efectivo}));
+  return`<div class="order-card" id="${order.id}">
+    <div class="order-card-header"><div><div class="order-number">#${String(order.index).padStart(3,'0')} ${badge}</div><div class="order-client">${escHtml(order.cliente)}</div>${order.telefono?`<div class="order-meta">📞 ${escHtml(order.telefono)}</div>`:''}</div><div class="order-time">${escHtml(order.hora)}</div></div>
+    <div class="order-divider"></div>
+    <div class="order-items">${itemsHtml}</div>
+    ${order.direccion?`<div class="order-meta-row"><span class="order-meta-label">📍 Dirección</span><span class="order-meta-val">${escHtml(order.direccion)}</span></div>`:''}
+    ${order.pago?`<div class="order-meta-row"><span class="order-meta-label">💳 Pago</span><span class="order-meta-val">${escHtml(order.pago)}</span></div>`:''}
+    ${order.total?`<div class="order-total"><span class="order-total-label">TOTAL</span><span class="order-total-value">${escHtml(order.total)}</span></div>`:''}
+    <button class="btn-print" onclick="printOrder('${pd}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Imprimir</button>
+  </div>`;
+}
+
+/* ── METRICS ── */
+function getProductFreq(orders){
+  const freq={};
+  orders.forEach(o=>o.items.forEach(item=>{
+    const m1=item.match(/^(\d+)\s*[×x]\s*(.+)/i);
+    const m2=item.match(/^(.+?)\s*[×x]\s*(\d+)$/i);
+    const qty=m1?parseInt(m1[1]):m2?parseInt(m2[2]):1;
+    const clean=m1?m1[2].replace(/\s*—.*$/,'').trim():m2?m2[1].replace(/^[•\s]+/,'').trim():item.replace(/^[•\s]+/,'').trim();
+    if(clean) freq[clean]=(freq[clean]||0)+qty;
+  }));
+  return freq;
+}
+function getTopProduct(orders){
+  const f=getProductFreq(orders);
+  const s=Object.entries(f).sort((a,b)=>b[1]-a[1]);
+  return s.length?s[0][0]:null;
+}
+function updateMetrics(){
+  const tO=filterOrders(allOrders,'day');
+  const mO=filterOrders(allOrders,'month');
+  const wO=filterOrders(allOrders,'week');
+  const yO=filterOrders(allOrders,'year');
+  document.getElementById('metricToday').textContent=tO.length;
+  document.getElementById('metricMonth').textContent=mO.length;
+  document.getElementById('metricTop').textContent=getTopProduct(allOrders)||'—';
+  document.getElementById('m2Today').textContent=tO.length;
+  document.getElementById('m2Week').textContent=wO.length;
+  document.getElementById('m2Month').textContent=mO.length;
+  document.getElementById('m2Year').textContent=yO.length;
+  renderTopProducts(allOrders);
+  renderBottomProducts(allOrders);
+}
+function renderTopProducts(orders){
+  const freq=getProductFreq(orders);
+  const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxVal=sorted.length?sorted[0][1]:1;
+  const list=document.getElementById('topProductsList');
+  if(!sorted.length){list.innerHTML='<p style="color:#555;font-size:13px">Sin datos</p>';return;}
+  list.innerHTML=sorted.map(([name,count],i)=>`<div class="tpl-item"><span class="tpl-rank">#${i+1}</span><div style="flex:1"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span class="tpl-name">${escHtml(name)}</span><span class="tpl-count">${count}x</span></div><div class="tpl-bar" style="width:${Math.round(count/maxVal*100)}%"></div></div></div>`).join('');
+}
+function renderBottomProducts(orders){
+  const freq=getProductFreq(orders);
+  const all=Object.entries(freq).sort((a,b)=>a[1]-b[1]);
+  // mostrar los últimos 6 (menos vendidos)
+  const bottom=all.slice(0,Math.min(6,all.length));
+  const maxVal=bottom.length?Math.max(...bottom.map(([,v])=>v),1):1;
+  const list=document.getElementById('bottomProductsList');
+  if(!bottom.length){list.innerHTML='<p style="color:#555;font-size:13px">Sin datos</p>';return;}
+  list.innerHTML=bottom.map(([name,count],i)=>`<div class="tpl-item"><span class="tpl-rank" style="color:#e05252">#${i+1}</span><div style="flex:1"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span class="tpl-name">${escHtml(name)}</span><span class="tpl-count" style="color:#e05252">${count}x</span></div><div class="tpl-bar red-bar" style="width:${Math.round(count/maxVal*100)}%"></div></div></div>`).join('');
+}
+
+/* ── VENTAS ── */
+function renderVentas(){
+  if(!allOrders.length) return;
+  const customDateInp=document.getElementById('ventasCustomDate');
+  const useCustomDate = customDateInp && customDateInp.style.display!=='none' && customDateInp.value;
+  const filtroSel=document.getElementById('ventasMesFilter')?.value||'all';
+  const filtro = useCustomDate ? 'custom_date:'+customDateInp.value : filtroSel;
+  const base=filterOrders(allOrders, filtro==='all'?undefined:filtro);
+  ['day','week','month','year'].forEach((p,i)=>{
+    const t=filterOrders(allOrders,p).reduce((a,o)=>a+parseTotal(o.total),0);
+    const el=document.getElementById(['vToday','vWeek','vMonth','vYear'][i]);
+    if(el) el.textContent=formatMoney(t);
+  });
+  const localO=base.filter(o=>o.entrega&&o.entrega.toLowerCase().includes('recoger'));
+  const domO=base.filter(o=>o.entrega&&o.entrega.toLowerCase().includes('domicilio'));
+  const comerO=base.filter(o=>o.entrega&&o.entrega.toLowerCase().includes('comer'));
+  document.getElementById('vLocal').textContent=formatMoney(localO.reduce((a,o)=>a+parseTotal(o.total),0));
+  document.getElementById('vLocalCount').textContent=localO.length;
+  document.getElementById('vDom').textContent=formatMoney(domO.reduce((a,o)=>a+parseTotal(o.total),0));
+  document.getElementById('vDomCount').textContent=domO.length;
+  if(document.getElementById('vRecoger')){
+    document.getElementById('vRecoger').textContent=formatMoney(comerO.reduce((a,o)=>a+parseTotal(o.total),0));
+    document.getElementById('vRecogerCount').textContent=comerO.length;
+  }
+  renderVentasProducto();
+  renderMenosVendidos();
+  renderMesAMes();
+}
+function setVentasProductoPeriodo(p,btn){
+  ventasProductoPeriodo=p;
+  document.querySelectorAll('#section-ventas .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderVentasProducto();
+  renderMenosVendidos();
+}
+function renderVentasProducto(){
+  const orders=filterOrders(allOrders,ventasProductoPeriodo);
+  const freq=getProductFreq(orders);
+  const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const maxVal=sorted.length?sorted[0][1]:1;
+  const list=document.getElementById('ventasProductoList');
+  if(!sorted.length){list.innerHTML='<p style="color:#555;font-size:13px">Sin datos en este período</p>';return;}
+  list.innerHTML=sorted.map(([name,count],i)=>`<div class="tpl-item"><span class="tpl-rank">#${i+1}</span><div style="flex:1"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span class="tpl-name">${escHtml(name)}</span><span class="tpl-count">${count} und.</span></div><div class="tpl-bar" style="width:${Math.round(count/maxVal*100)}%"></div></div></div>`).join('');
+}
+function renderMenosVendidos(){
+  const orders=filterOrders(allOrders,ventasProductoPeriodo);
+  const freq=getProductFreq(orders);
+  const bottom=Object.entries(freq).sort((a,b)=>a[1]-b[1]).slice(0,6);
+  const maxVal=bottom.length?Math.max(...bottom.map(([,v])=>v),1):1;
+  const list=document.getElementById('menosVendidosList');
+  if(!bottom.length){list.innerHTML='<p style="color:#555;font-size:13px">Sin datos en este período</p>';return;}
+  list.innerHTML=bottom.map(([name,count],i)=>`<div class="tpl-item"><span class="tpl-rank" style="color:#e05252">#${i+1}</span><div style="flex:1"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span class="tpl-name">${escHtml(name)}</span><span class="tpl-count" style="color:#e05252">${count} und.</span></div><div class="tpl-bar red-bar" style="width:${Math.round(count/maxVal*100)}%"></div></div></div>`).join('');
+}
+function renderMesAMes(){
+  const meses={};
+  allOrders.forEach(o=>{
+    const key=`${o.dateObj.getFullYear()}-${String(o.dateObj.getMonth()+1).padStart(2,'0')}`;
+    meses[key]=(meses[key]||0)+parseTotal(o.total);
+  });
+  const sorted=Object.entries(meses).sort((a,b)=>a[0].localeCompare(b[0])).slice(-12);
+  const el=document.getElementById('mesAMesChart');
+  if(!sorted.length){el.innerHTML='<p style="color:#555;font-size:13px">Sin datos</p>';return;}
+  const maxVal=Math.max(...sorted.map(([,v])=>v));
+  const nm=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  el.innerHTML=`<div class="bar-chart">${sorted.map(([key,val])=>{const[yr,mo]=key.split('-');const pct=maxVal>0?Math.round(val/maxVal*100):0;return`<div class="bar-item"><div class="bar-wrap"><div class="bar-fill" style="height:${pct}%" title="${formatMoney(val)}"></div></div><div class="bar-value">${formatMoney(val)}</div><div class="bar-label">${nm[parseInt(mo)-1]} ${yr.slice(2)}</div></div>`}).join('')}</div>`;
+}
+function exportVentasExcel(){
+  const meses={},counts={};
+  allOrders.forEach(o=>{const k=`${o.dateObj.getFullYear()}-${String(o.dateObj.getMonth()+1).padStart(2,'0')}`;meses[k]=(meses[k]||0)+parseTotal(o.total);counts[k]=(counts[k]||0)+1;});
+  const rows=Object.entries(meses).sort((a,b)=>a[0].localeCompare(b[0])).map(([k,t])=>{const c=counts[k];return[k,Math.round(t),c,Math.round(t/c)].map(v=>`"${v}"`).join(';');});
+  const csv='\uFEFF'+'Mes;Total Ventas;Pedidos;Ticket Promedio\n'+rows.join('\n');
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'})),download:'AIMAX_Ventas_MesAMes.csv'});
+  a.click();showMsg('Excel descargado ✓','green');
+}
+
+/* ── CLIENTES ── */
+function renderClientes(){
+  if(!allOrders.length) return;
+  const busq=(document.getElementById('clienteSearch')?.value||'').toLowerCase().trim();
+  const clientes={};
+  allOrders.forEach(o=>{
+    const k=o.cliente.trim().toLowerCase();
+    if(!clientes[k]) clientes[k]={nombre:o.cliente,pedidos:[],telefono:o.telefono,productos:{}};
+    clientes[k].pedidos.push(o);
+    o.items.forEach(item=>{
+      const name=item.replace(/^(.+?)\s*[×x]\s*\d+$/i,'$1').replace(/^\d+[x×]\s*/i,'').trim();
+      if(name) clientes[k].productos[name]=(clientes[k].productos[name]||0)+1;
+    });
+  });
+  const lista=Object.values(clientes);
+  document.getElementById('cUnicos').textContent=lista.length;
+  document.getElementById('cFrecuentes').textContent=lista.filter(c=>c.pedidos.length>=2).length;
+  const totD=allOrders.reduce((a,o)=>a+parseTotal(o.total),0);
+  document.getElementById('cTicketProm').textContent=formatMoney(allOrders.length>0?totD/allOrders.length:0);
+  let fS=0,fC=0;
+  lista.forEach(c=>{if(c.pedidos.length>=2){const s=c.pedidos.map(p=>p.dateObj.getTime()).sort((a,b)=>a-b);const d=(s[s.length-1]-s[0])/(86400000);const f=d/(c.pedidos.length-1);if(f>0){fS+=f;fC++;}}});
+  document.getElementById('cFrecProm').textContent=fC>0?Math.round(fS/fC)+'d':'—';
+  let filtrados=lista;
+  if(busq) filtrados=lista.filter(c=>c.nombre.toLowerCase().includes(busq));
+  filtrados.sort((a,b)=>b.pedidos.length-a.pedidos.length);
+  const container=document.getElementById('clientesTable');
+  if(!filtrados.length){container.innerHTML='<p style="color:#555;font-size:13px">Sin resultados</p>';return;}
+  container.innerHTML=filtrados.map(c=>{
+    const peds=c.pedidos.sort((a,b)=>a.dateObj-b.dateObj);
+    const tG=c.pedidos.reduce((a,o)=>a+parseTotal(o.total),0);
+    const tC=c.pedidos.length>0?tG/c.pedidos.length:0;
+    const top=Object.entries(c.productos).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([n,q])=>`${n} (${q}x)`).join(', ');
+    let frec='—';if(peds.length>=2){const d=(peds[peds.length-1].dateObj-peds[0].dateObj)/86400000;frec=Math.round(d/(peds.length-1))+'d';}
+    return`<div class="cliente-row"><div class="cliente-header"><div><span class="cliente-nombre">${escHtml(c.nombre)}</span>${c.telefono?`<span class="cliente-tel">📞 ${escHtml(c.telefono)}</span>`:''}</div><div style="text-align:right"><div class="cliente-stat-val">${formatMoney(tG)}</div><div class="cliente-stat-lab">total gastado</div></div></div><div class="cliente-stats"><div class="cliente-stat"><span class="cliente-stat-val">${c.pedidos.length}</span><span class="cliente-stat-lab">pedidos</span></div><div class="cliente-stat"><span class="cliente-stat-val">${formatMoney(tC)}</span><span class="cliente-stat-lab">ticket prom.</span></div><div class="cliente-stat"><span class="cliente-stat-val">${frec}</span><span class="cliente-stat-lab">entre compras</span></div><div class="cliente-stat"><span class="cliente-stat-val">${peds.length>0?peds[peds.length-1].fecha:'—'}</span><span class="cliente-stat-lab">última compra</span></div></div>${top?`<div class="cliente-prods">🔁 Repite: ${escHtml(top)}</div>`:''}</div>`;
+  }).join('');
+}
+
+/* ── HORAS ── */
+function setHorasPeriodo(p,btn){horasPeriodo=p;document.querySelectorAll('#section-horas .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderHoras();}
+function renderHoras(){renderPedidosPorHora();renderHorasDia();renderRangoHorario();}
+function renderPedidosPorHora(){
+  const orders=filterOrders(allOrders,horasPeriodo);
+  const byHour=Array(24).fill(0);
+  orders.forEach(o=>byHour[o.dateObj.getHours()]++);
+  const maxVal=Math.max(...byHour,1);
+  document.getElementById('horasChart').innerHTML=`<div class="horas-bar-chart">${byHour.map((count,h)=>{const pct=Math.round(count/maxVal*100);const label=`${String(h).padStart(2,'0')}:00`;return`<div class="hora-bar-item ${count===Math.max(...byHour)&&count>0?'hora-peak':''}"><div class="hora-bar-wrap"><div class="hora-bar-fill" style="height:${pct}%" title="${count} pedidos a las ${label}"></div></div><div class="hora-bar-count">${count>0?count:''}</div><div class="hora-bar-label">${h%2===0?label:''}</div></div>`;}).join('')}</div>`;
+}
+function renderHorasDia(){
+  const dias=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const matriz=Array.from({length:24},()=>Array(7).fill(0));
+  allOrders.forEach(o=>{matriz[o.dateObj.getHours()][o.dateObj.getDay()]++;});
+  const maxVal=Math.max(...matriz.flat(),1);
+  document.getElementById('horasDiaChart').innerHTML=`<div style="overflow-x:auto"><table class="horas-tabla"><thead><tr><th>Hora</th>${dias.map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>${matriz.map((row,h)=>{const rt=row.reduce((a,b)=>a+b,0);if(!rt) return '';return`<tr><td class="horas-tabla-hora">${String(h).padStart(2,'0')}:00</td>${row.map(v=>{const i=v>0?Math.round(v/maxVal*100):0;return`<td class="horas-cell ${i>60?'hot':i>30?'warm':i>0?'cool':''}" title="${v} pedidos">${v>0?v:''}</td>`;}).join('')}</tr>`;}).join('')}</tbody></table></div>`;
+}
+function renderRangoHorario(){
+  const desde=document.getElementById('rangoDesde')?.value||'00:00';
+  const hasta=document.getElementById('rangoHasta')?.value||'23:59';
+  const periodo=document.getElementById('rangoPeriodo')?.value||'all';
+  const[hD,mD]=desde.split(':').map(Number);const[hH,mH]=hasta.split(':').map(Number);
+  const orders=filterOrders(allOrders,periodo).filter(o=>{const mins=o.dateObj.getHours()*60+o.dateObj.getMinutes();return mins>=hD*60+mD&&mins<=hH*60+mH;});
+  const t=orders.reduce((a,o)=>a+parseTotal(o.total),0);
+  const elP=document.getElementById('rangoPedidos'),elV=document.getElementById('rangoVentas');
+  if(elP) elP.textContent=orders.length;if(elV) elV.textContent=formatMoney(t);
+}
+
+/* ══════════════════════════════════════
+   CIERRE DE CAJA
+══════════════════════════════════════ */
+let cierrePeriodo = 'day';
+
+function setCierrePeriodo(p, btn) {
+  cierrePeriodo = p;
+  document.querySelectorAll('#section-cierre .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // Actualizar la fecha badge
+  actualizarFechaCierre();
+}
+
+function actualizarFechaCierre() {
+  const el=document.getElementById('cierreFechaHoy');
+  if(!el) return;
+  if(cierrePeriodo==='yesterday'){
+    const ayer=new Date(); ayer.setDate(ayer.getDate()-1);
+    el.textContent='Ayer — '+ayer.toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  } else if(cierrePeriodo&&cierrePeriodo.startsWith('custom_date:')){
+    const dateStr=cierrePeriodo.replace('custom_date:','');
+    const d=new Date(dateStr+'T00:00:00');
+    el.textContent=d.toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  } else {
+    el.textContent='Hoy — '+new Date().toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  }
+}
+
+function formatBaseInput(el){
+  const raw=el.value.replace(/[^0-9]/g,'');
+  if(!raw){el.value='';return;}
+  el.value='$'+parseInt(raw).toLocaleString('es-CO');
+}
+function getBaseValue(){
+  return parseInt((document.getElementById('cierreBaseInput').value||'').replace(/[^0-9]/g,''))||0;
+}
+
+function sacarZ(){
+  const todayOrders=filterOrders(allOrders, cierrePeriodo);
+  const totalDia=todayOrders.reduce((a,o)=>a+parseTotal(o.total),0);
+  const base=getBaseValue();
+  const dif=totalDia-base;
+  const ticket=todayOrders.length>0?totalDia/todayOrders.length:0;
+
+  document.getElementById('cierreTotalDia').textContent=formatMoney(totalDia);
+  document.getElementById('cierrePedidosSub').textContent=`${todayOrders.length} pedido${todayOrders.length!==1?'s':''} · Ticket prom: ${formatMoney(ticket)}`;
+  const difEl=document.getElementById('cierreDiferencia');
+  if(base>0){difEl.textContent=(dif>=0?'+':'')+formatMoney(dif);difEl.className='cierre-dif-value'+(dif<0?' negativo':'');}
+  else{difEl.textContent='—';difEl.className='cierre-dif-value';}
+
+  // Medios de pago
+  const pagos={};
+  todayOrders.forEach(o=>{
+    const p=(o.pago||'Sin especificar').trim();
+    if(!pagos[p]) pagos[p]={total:0,count:0};
+    pagos[p].total+=parseTotal(o.total);
+    pagos[p].count++;
+  });
+  const efKeys=['efectivo','cash','contado'];
+  let sumEf=0,sumTr=0;
+  const pagosSorted=Object.entries(pagos).sort((a,b)=>b[1].total-a[1].total);
+  document.getElementById('cierrePagosGrid').innerHTML=pagosSorted.map(([nombre,data])=>{
+    const esEf=efKeys.some(k=>nombre.toLowerCase().includes(k));
+    if(esEf) sumEf+=data.total; else sumTr+=data.total;
+    return`<div class="pago-card ${esEf?'efectivo':'transferencia'}"><div class="pago-name">${esEf?'💵':'🏦'} ${escHtml(nombre)}</div><div class="pago-total">${formatMoney(data.total)}</div><div class="pago-count">${data.count} pedido${data.count!==1?'s':''}</div></div>`;
+  }).join('')||'<p style="color:#555;font-size:13px">Sin pedidos hoy</p>';
+  document.getElementById('sumEfectivo').textContent=formatMoney(sumEf);
+  document.getElementById('sumTransf').textContent=formatMoney(sumTr);
+
+  // Top cliente del día
+  const clientesDia={};
+  todayOrders.forEach(o=>{const k=o.cliente.trim().toLowerCase();if(!clientesDia[k])clientesDia[k]={nombre:o.cliente,total:0,count:0};clientesDia[k].total+=parseTotal(o.total);clientesDia[k].count++;});
+  const topCli=Object.values(clientesDia).sort((a,b)=>b.total-a.total)[0];
+  document.getElementById('topClienteHoy').textContent=topCli?topCli.nombre:'—';
+  document.getElementById('topClienteHoySub').textContent=topCli?`${topCli.count} pedido${topCli.count!==1?'s':''} · ${formatMoney(topCli.total)}`:'Sin pedidos hoy';
+
+  // Top producto del día
+  const freqHoy=getProductFreq(todayOrders);
+  const sortedHoy=Object.entries(freqHoy).sort((a,b)=>b[1]-a[1]);
+  const topProd=sortedHoy[0];
+  document.getElementById('topProdHoy').textContent=topProd?topProd[0]:'—';
+  document.getElementById('topProdHoySub').textContent=topProd?`${topProd[1]} unidad${topProd[1]!==1?'es':''} vendida${topProd[1]!==1?'s':''}`:'Sin ventas hoy';
+
+  // Producto menos vendido del día
+  const bottomProd=sortedHoy[sortedHoy.length-1];
+  document.getElementById('bottomProdHoy').textContent=bottomProd?bottomProd[0]:'—';
+  document.getElementById('bottomProdHoySub').textContent=bottomProd&&bottomProd!==topProd?`Solo ${bottomProd[1]} unidad${bottomProd[1]!==1?'es':''}`:bottomProd?'El único vendido':'Sin ventas';
+
+  // Entregas
+  const dom=todayOrders.filter(o=>o.entrega&&o.entrega.toLowerCase().includes('dom')).length;
+  const loc=todayOrders.filter(o=>o.entrega&&o.entrega.toLowerCase().includes('recoger')).length;
+  const com=todayOrders.filter(o=>o.entrega&&o.entrega.toLowerCase().includes('comer')).length;
+  document.getElementById('entregasHoy').textContent=`${todayOrders.length} total`;
+  document.getElementById('entregasHoySub').textContent=`🛵 Dom: ${dom} · 🏃 Recoger: ${loc} · 🏠 Comer: ${com}`;
+
+  // ── DIARIO DE VENTAS: todos los platos vendidos ──
+  renderCierrePlatosTable(todayOrders, totalDia);
+
+  // Tendencia
+  renderTendencia();
+  renderMenosTendencia();
+
+  document.getElementById('cierreResumen').classList.add('visible');
+  setTimeout(()=>document.getElementById('cierreResumen').scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+
+function renderCierrePlatosTable(periodOrders, totalDia) {
+  const el = document.getElementById('cierrePlatosVendidos');
+  if (!el) return;
+  const freq = getProductFreq(periodOrders);
+
+  // Cruzar con catálogo
+  const catalogo = getCatalogo();
+  const merged = {...freq};
+  catalogo.forEach(plato => { if (!(plato in merged)) merged[plato] = 0; });
+
+  // Calcular última compra de cada plato en TODOS los pedidos históricos
+  const ultimaCompra = {};
+  allOrders.forEach(o => {
+    const freq2 = getProductFreq([o]);
+    Object.keys(freq2).forEach(name => {
+      if (!ultimaCompra[name] || o.dateObj > ultimaCompra[name]) {
+        ultimaCompra[name] = o.dateObj;
+      }
+    });
+  });
+
+  const sorted = Object.entries(merged).sort((a,b)=>{
+    if(b[1]!==a[1]) return b[1]-a[1];
+    return a[0].localeCompare(b[0]);
+  });
+
+  if (!sorted.length) {
+    el.innerHTML = '<p style="color:#555;font-size:13px">Sin platos. Agrega tu catálogo en Configuración.</p>';
+    return;
+  }
+  const maxVal = sorted.find(([,v])=>v>0)?.[1] || 1;
+  const totalUnidades = sorted.reduce((a,[,v])=>a+v, 0);
+  const periodoLabel = cierrePeriodo==='yesterday' ? 'Ayer' : 'Hoy';
+  const vendidos = sorted.filter(([,v])=>v>0).length;
+  const sinVentas = sorted.filter(([,v])=>v===0).length;
+
+  function diasDesde(d){ if(!d) return null; return Math.floor((new Date()-d)/86400000); }
+  function ultimaLabel(name){
+    const uc = ultimaCompra[name];
+    if(!uc) return '<span style="color:#333;font-size:10px">Nunca comprado</span>';
+    const dias = diasDesde(uc);
+    const label = dias===0?'Hoy':dias===1?'Ayer':`Hace ${dias} días`;
+    const color = dias<=7?'#555':dias<=30?'#444':'#333';
+    return `<span style="color:${color};font-size:10px">Última: ${label}</span>`;
+  }
+
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;padding:10px 0;border-bottom:1px solid #1a1a1a">
+      <span style="font-size:12px;color:#888">
+        <strong style="color:#fff">${vendidos}</strong> vendidos ·
+        <strong style="color:#fff">${totalUnidades}</strong> unidades ·
+        ${sinVentas>0?`<strong style="color:#444">${sinVentas} sin ventas hoy</strong> ·`:''}
+        ${periodoLabel}
+      </span>
+      <span style="font-size:11px;color:#555">🥇 dorado = más vendido · gris = sin ventas</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+    ${sorted.map(([name,count],i)=>{
+      const pct = count>0 ? Math.round(count/maxVal*100) : 0;
+      const esTop = i===0 && count>0;
+      const esCero = count===0;
+      const barColor = esTop ? '#D4AF37' : esCero ? '#1a1a1a' : '#444';
+      const numColor = esTop ? '#D4AF37' : esCero ? '#2a2a2a' : '#888';
+      const bg = esTop ? 'background:#0d0a00;border-color:#2a2200' : esCero ? 'background:#060606;border-color:#111' : '';
+      const opacity = esCero ? 'opacity:0.7' : '';
+      return `<div style="border:1px solid #1a1a1a;${bg};${opacity};padding:9px 14px;border-radius:4px;display:flex;align-items:center;gap:12px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${numColor};min-width:26px;text-align:right">${count>0?count+'x':'—'}</span>
+        <div style="flex:1">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <span style="font-size:13px;color:${esCero?'#444':'#f5f5f5'}">${escHtml(name)}</span>
+              ${esCero ? ultimaLabel(name) : ''}
+            </div>
+            ${esTop?'<span style="font-size:10px;background:rgba(212,175,55,.15);color:#D4AF37;border:1px solid #a88a20;padding:1px 7px;border-radius:100px">🏆 TOP</span>':''}
+            ${esCero?'<span style="font-size:10px;background:rgba(40,40,40,.5);color:#444;border:1px solid #222;padding:1px 7px;border-radius:100px">Sin ventas</span>':''}
+          </div>
+          <div style="height:3px;background:#1a1a1a;border-radius:2px">
+            <div style="height:3px;width:${pct}%;background:${barColor};border-radius:2px"></div>
+          </div>
+        </div>
+      </div>`;
+    }).join('')}
+    </div>`;
+}
+
+function renderTendencia(){
+  const now=new Date();
+  const mesesKeys=[];
+  for(let i=3;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);mesesKeys.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);}
+  const nm=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const prodMes={};
+  allOrders.forEach(o=>{
+    const k=`${o.dateObj.getFullYear()}-${String(o.dateObj.getMonth()+1).padStart(2,'0')}`;
+    if(!mesesKeys.includes(k)) return;
+    const freq=getProductFreq([o]);
+    Object.entries(freq).forEach(([n,q])=>{if(!prodMes[n])prodMes[n]={};prodMes[n][k]=(prodMes[n][k]||0)+q;});
+  });
+  const prods=Object.entries(prodMes).map(([name,byMes])=>{
+    const vals=mesesKeys.map(k=>byMes[k]||0);
+    const total=vals.reduce((a,b)=>a+b,0);
+    const maxV=Math.max(...vals,1);
+    const last=vals[vals.length-1],prev=vals[vals.length-2];
+    let trend='estable';if(last>prev*1.1) trend='subiendo';else if(last<prev*0.9) trend='bajando';
+    return{name,vals,total,maxV,trend};
+  }).sort((a,b)=>b.total-a.total).slice(0,8);
+
+  const tIcon={subiendo:'↑ Subiendo',bajando:'↓ Bajando',estable:'→ Estable'};
+  const grid=document.getElementById('tendenciaList');
+  if(!prods.length){grid.innerHTML='<p style="color:#555;font-size:13px">Necesita al menos 2 meses de datos</p>';return;}
+  grid.innerHTML=prods.map(p=>{
+    const bars=p.vals.map((v,i)=>`<div class="tendencia-bar-seg${i===p.vals.length-1?' activo':''}" style="height:${Math.max(Math.round(v/p.maxV*100),4)}%" title="${v} und."></div>`).join('');
+    const labels=mesesKeys.map(k=>`<div class="tendencia-mes-lbl">${nm[parseInt(k.split('-')[1])-1]}</div>`).join('');
+    return`<div class="tendencia-row"><div class="tendencia-header"><span class="tendencia-nombre">${escHtml(p.name)}</span><span class="tendencia-badge ${p.trend}">${tIcon[p.trend]}</span></div><div class="tendencia-bars">${bars}</div><div class="tendencia-mes-labels">${labels}</div></div>`;
+  }).join('');
+}
+
+function renderMenosTendencia(){
+  const now=new Date();
+  const mesesKeys=[];
+  for(let i=3;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);mesesKeys.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);}
+  const nm=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const prodMes={};
+  allOrders.forEach(o=>{
+    const k=`${o.dateObj.getFullYear()}-${String(o.dateObj.getMonth()+1).padStart(2,'0')}`;
+    if(!mesesKeys.includes(k)) return;
+    const freq=getProductFreq([o]);
+    Object.entries(freq).forEach(([n,q])=>{if(!prodMes[n])prodMes[n]={};prodMes[n][k]=(prodMes[n][k]||0)+q;});
+  });
+  const prods=Object.entries(prodMes).map(([name,byMes])=>{
+    const vals=mesesKeys.map(k=>byMes[k]||0);
+    const total=vals.reduce((a,b)=>a+b,0);
+    const maxV=Math.max(...vals,1);
+    const last=vals[vals.length-1],prev=vals[vals.length-2];
+    let trend='estable';if(last>prev*1.1) trend='subiendo';else if(last<prev*0.9) trend='bajando';
+    return{name,vals,total,maxV,trend};
+  }).sort((a,b)=>a.total-b.total).slice(0,6); // los menos vendidos
+
+  const tIcon={subiendo:'↑ Subiendo',bajando:'↓ Bajando',estable:'→ Estable'};
+  const grid=document.getElementById('menosTendenciaList');
+  if(!prods.length){grid.innerHTML='<p style="color:#555;font-size:13px">Sin datos suficientes</p>';return;}
+  grid.innerHTML=prods.map(p=>{
+    const bars=p.vals.map((v,i)=>`<div class="tendencia-bar-seg${i===p.vals.length-1?' activo':''}" style="height:${Math.max(Math.round(v/p.maxV*100),4)}%;background:${i===p.vals.length-1?'#e05252':'#2a1a1a'}" title="${v} und."></div>`).join('');
+    const labels=mesesKeys.map(k=>`<div class="tendencia-mes-lbl">${nm[parseInt(k.split('-')[1])-1]}</div>`).join('');
+    return`<div class="tendencia-row" style="border-color:#2a1a1a"><div class="tendencia-header"><span class="tendencia-nombre">${escHtml(p.name)}</span><span class="tendencia-badge ${p.trend}">${tIcon[p.trend]}</span></div><div class="tendencia-bars">${bars}</div><div class="tendencia-mes-labels">${labels}</div></div>`;
+  }).join('');
+}
+
+function renderCierrePlatosTable(orders, totalDia) {
+  // Construir frecuencia con cantidades reales — TODOS los artículos, incluso con 1
+  const freq = {};
+  orders.forEach(o => {
+    o.items.forEach(item => {
+      const m1 = item.match(/^(\d+)\s*[×x]\s*(.+)/i);
+      const m2 = item.match(/^(.+?)\s*[×x]\s*(\d+)$/i);
+      const qty  = m1 ? parseInt(m1[1]) : m2 ? parseInt(m2[2]) : 1;
+      const clean = m1 ? m1[2].replace(/\s*—.*$/,'').trim()
+                  : m2 ? m2[1].replace(/^[•\s]+/,'').trim()
+                  : item.replace(/^[•\s]+/,'').trim();
+      if (clean) freq[clean] = (freq[clean] || 0) + qty;
+    });
+  });
+
+  const sorted = Object.entries(freq).sort((a,b) => b[1] - a[1]);
+  const totalItems = sorted.reduce((a,[,v]) => a+v, 0);
+  const body = document.getElementById('cierrePlatosBody');
+  const foot = document.getElementById('cierrePlatosFoot');
+
+  if (!sorted.length) {
+    body.innerHTML = '<tr><td colspan="3" style="padding:20px;text-align:center;color:#555">Sin artículos vendidos en este período</td></tr>';
+    foot.innerHTML = '';
+    return;
+  }
+
+  body.innerHTML = sorted.map(([name, qty], i) => {
+    const isTop = i === 0;
+    const isLow = qty === 1;
+    return `<tr style="border-bottom:1px solid #1a1a1a;${isTop?'background:rgba(212,175,55,0.04)':''}">
+      <td style="padding:9px 12px;color:${isTop?'#D4AF37':'#f5f5f5'};font-size:13px;font-weight:${isTop?'600':'400'}">
+        ${isTop?'🏆 ':''}${escHtml(name)}
+      </td>
+      <td style="padding:9px 12px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:13px;color:${isLow?'#888':'#fff'};font-weight:600">${qty}</td>
+      <td style="padding:9px 12px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:11px;color:#666">
+        ${Math.round(qty/totalItems*100)}%
+      </td>
+    </tr>`;
+  }).join('');
+
+  foot.innerHTML = `<tr style="border-top:2px solid #D4AF37;background:#111">
+    <td style="padding:10px 12px;font-weight:700;font-size:13px;color:#D4AF37">TOTAL ARTÍCULOS</td>
+    <td style="padding:10px 12px;text-align:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:14px;color:#D4AF37">${totalItems}</td>
+    <td style="padding:10px 12px;text-align:right;font-family:'Bebas Neue',sans-serif;font-size:18px;color:#D4AF37">${formatMoney(totalDia)}</td>
+  </tr>`;
+}
+
+/* ── IMPRIMIR Z ── */
+function imprimirTicketZ(){
+  if(!document.getElementById('cierreResumen').classList.contains('visible')) sacarZ();
+  const todayOrders=filterOrders(allOrders, cierrePeriodo);
+  const totalDia=todayOrders.reduce((a,o)=>a+parseTotal(o.total),0);
+  const base=getBaseValue();const dif=totalDia-base;
+  const ticket=todayOrders.length>0?totalDia/todayOrders.length:0;
+  const rName=CONFIG.restaurantName||'Mi Restaurante';
+  const now=new Date();
+  const fechaStr=now.toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric',timeZone:'America/Bogota'});
+  const horaStr=now.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',hour12:true,timeZone:'America/Bogota'}).toUpperCase();
+  const pagos={};let sumEf=0,sumTr=0;
+  todayOrders.forEach(o=>{const p=(o.pago||'Sin especificar').trim();if(!pagos[p])pagos[p]={total:0,count:0};pagos[p].total+=parseTotal(o.total);pagos[p].count++;});
+  const efKeys=['efectivo','cash','contado'];
+  const pagosRows=Object.entries(pagos).sort((a,b)=>b[1].total-a[1].total).map(([n,d])=>{const esEf=efKeys.some(k=>n.toLowerCase().includes(k));if(esEf)sumEf+=d.total;else sumTr+=d.total;return`<tr><td>${n}</td><td style="text-align:right;font-weight:700">${formatMoney(d.total)}</td><td style="text-align:right;color:#888">${d.count}x</td></tr>`;}).join('');
+  const freqHoy=getProductFreq(todayOrders);
+  const topProds=Object.entries(freqHoy).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const botProds=Object.entries(freqHoy).sort((a,b)=>a[1]-b[1]).slice(0,3);
+
+  // Build full platos list for ticket
+  const freqAll = {};
+  todayOrders.forEach(o => {
+    o.items.forEach(item => {
+      const m1=item.match(/^(\d+)\s*[×x]\s*(.+)/i);
+      const m2=item.match(/^(.+?)\s*[×x]\s*(\d+)$/i);
+      const qty=m1?parseInt(m1[1]):m2?parseInt(m2[2]):1;
+      const clean=m1?m1[2].replace(/\s*—.*$/,'').trim():m2?m2[1].replace(/^[•\s]+/,'').trim():item.replace(/^[•\s]+/,'').trim();
+      if(clean) freqAll[clean]=(freqAll[clean]||0)+qty;
+    });
+  });
+  const allPlatos=Object.entries(freqAll).sort((a,b)=>b[1]-a[1]);
+  const totalItems=allPlatos.reduce((a,[,v])=>a+v,0);
+  const platosRows=allPlatos.map(([n,q])=>`<tr><td style="padding:2px 0">${n}</td><td style="text-align:center;font-weight:700;padding:2px 4px">${q}</td></tr>`).join('');
+
+  document.getElementById('zTicketContent').innerHTML=`
+  <div style="text-align:center;font-family:'Courier Prime','Courier New',monospace">
+    <div style="font-size:9px;color:#666">* * * * * * * * * * * * * * * * * * * * *</div>
+    <div style="font-size:14px;font-weight:700;letter-spacing:2px;margin:4px 0">${escHtml(rName)}</div>
+    <div style="font-size:10px;color:#666;letter-spacing:1px">DIARIO DE VENTAS</div>
+    <div style="font-size:9px;color:#666">* * * * * * * * * * * * * * * * * * * * *</div>
+  </div>
+  <div style="font-family:monospace;font-size:11px;margin:6px 0">
+    <div style="display:flex;justify-content:space-between"><span>Caja 1 - Caja Principal</span></div>
+    <div style="display:flex;justify-content:space-between"><span>Fecha:</span><span>${fechaStr}</span></div>
+    <div style="display:flex;justify-content:space-between"><span>Hora cierre:</span><span>${horaStr}</span></div>
+  </div>
+  <div style="border-top:1px dashed #ccc;border-bottom:1px dashed #ccc;padding:3px 0;margin:4px 0;font-family:monospace;font-size:10px">
+    <div style="display:flex;justify-content:space-between;font-weight:700"><span>Artículo</span><span>Cant.</span></div>
+  </div>
+  <table style="width:100%;font-family:monospace;font-size:11px;border-collapse:collapse">
+    ${allPlatos.map(([n,q])=>`<tr><td style="padding:2px 0;padding-right:8px">${n}</td><td style="text-align:right;font-weight:700;white-space:nowrap">${q}</td></tr>`).join('')}
+  </table>
+  <div style="border-top:1px dashed #ccc;padding-top:4px;margin-top:6px;font-family:monospace;font-size:11px">
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Total artículos:</span><span style="font-weight:700">${totalItems}</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:#666;margin-bottom:2px"><span>Pedidos del período:</span><span>${todayOrders.length}</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:#666"><span>Ticket promedio:</span><span>${formatMoney(ticket)}</span></div>
+  </div>
+  <div style="border-top:1px dashed #ccc;padding:4px 0;margin:6px 0;font-family:monospace;font-size:10px;color:#666;text-transform:uppercase;letter-spacing:1px">Medios de Pago</div>
+  <table style="width:100%;font-family:monospace;font-size:11px;border-collapse:collapse">${pagosRows}</table>
+  <div style="border-top:1px solid #000;border-bottom:1px solid #000;margin:8px 0;padding:6px 0;font-family:monospace;font-size:11px">
+    <div style="display:flex;justify-content:space-between"><span>💵 Efectivo:</span><span style="font-weight:700">${formatMoney(sumEf)}</span></div>
+    <div style="display:flex;justify-content:space-between;margin-top:2px"><span>🏦 Transferencias:</span><span style="font-weight:700">${formatMoney(sumTr)}</span></div>
+  </div>
+  <div style="text-align:center;font-family:monospace;font-size:13px;font-weight:700;margin:8px 0">
+    Total: ${formatMoney(totalDia)}
+  </div>
+  ${base>0?`<div style="text-align:center;font-family:monospace;font-size:11px;color:#666;margin-bottom:6px">Base: ${formatMoney(base)} · Diferencia: <span style="font-weight:700;color:${dif>=0?'#000':'#cc0000'}">${dif>=0?'+':''}${formatMoney(dif)}</span></div>`:''}
+  <div style="text-align:center;border-top:1px dashed #ccc;margin-top:8px;padding-top:6px;font-size:9px;color:#888;font-family:monospace">powered by AIMAX Restaurant OS</div>`;
+
+  document.getElementById('zModalOverlay').classList.remove('hidden');
+}
+
+/* ── TICKET SIZE ── */
+function selectTicketSize(el){
+  document.querySelectorAll('.ticket-size-option').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('ticketWidthInput').value=el.dataset.width;
+  document.getElementById('ticketFontInput').value=el.dataset.font;
+}
+function saveTicketSize(){
+  const w=parseInt(document.getElementById('ticketWidthInput').value);
+  const f=parseInt(document.getElementById('ticketFontInput').value);
+  const msg=document.getElementById('ticketSizeMsg');
+  if(!w||w<150||w>600){msg.style.color='#e05252';msg.textContent='Ancho inválido (150–600px).';return;}
+  if(!f||f<8||f>20){msg.style.color='#e05252';msg.textContent='Fuente inválida (8–20px).';return;}
+  localStorage.setItem('aimax_ticket_width',w);localStorage.setItem('aimax_ticket_font',f);
+  msg.style.color='#52c07a';msg.textContent='Configuración guardada ✓';
+}
+function loadTicketSizeUI(){
+  const w=localStorage.getItem('aimax_ticket_width');const f=localStorage.getItem('aimax_ticket_font');
+  if(w) document.getElementById('ticketWidthInput').value=w;
+  if(f) document.getElementById('ticketFontInput').value=f;
+  if(w&&f) document.querySelectorAll('.ticket-size-option').forEach(o=>{if(o.dataset.width===w&&o.dataset.font===f) o.classList.add('selected');});
+}
+
+/* ── PRINT ── */
+function printOrder(encodedData){
+  const order=JSON.parse(decodeURIComponent(encodedData));
+  const container=document.getElementById('ticketContainer');
+  const rName=CONFIG.restaurantName||localStorage.getItem('aimax_name')||'';
+  const tw=parseInt(localStorage.getItem('aimax_ticket_width'))||300;
+  const tf=parseInt(localStorage.getItem('aimax_ticket_font'))||13;
+  container.style.width=tw+'px';container.style.fontSize=tf+'px';
+  const actions=document.querySelector('.print-modal-actions');if(actions) actions.style.width=tw+'px';
+  const items=order.items&&order.items.length>0?order.items:(order.pedido||'').split(/[,\n]/).map(s=>s.trim()).filter(Boolean);
+  function pqi(line){const m1=line.match(/^(\d+)\s*[×x]\s*(.+)/i);const m2=line.match(/^(.+?)\s*[×x](\d+)$/i);if(m1)return{qty:m1[1],name:m1[2].trim()};if(m2)return{qty:m2[2],name:m2[1].trim()};return{qty:'1',name:line};}
+  const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const itemsHtml=items.map(l=>{const{qty,name}=pqi(l);return`<div class="ticket-item"><span class="ticket-item-qty">${esc(qty)}x</span><span> ${esc(name)}</span></div>`;}).join('');
+  const totalHtml=order.total?`<div class="ticket-total"><span class="ticket-total-label">TOTAL</span><span class="ticket-total-value">${esc(order.total)}</span></div>`:'';
+  const paga=parseInt(String(order.efectivo||'').replace(/\D/g,''));const tot=parseInt(String(order.total||'').replace(/\D/g,''));const dev=paga-tot;
+  container.innerHTML=`<div class="ticket-header"><div class="ticket-logo">AIMAX</div>${rName?`<div class="ticket-resto">${esc(rName)}</div>`:''}<div class="ticket-tagline">Sistema de Pedidos</div></div><div class="ticket-info"><div class="ticket-info-row"><span class="ticket-info-label">PEDIDO #</span><span class="ticket-info-value">${String(order.index||'—').padStart(3,'0')}</span></div><div class="ticket-info-row"><span class="ticket-info-label">FECHA/HORA</span><span class="ticket-info-value">${esc((order.fecha||'')+' '+(order.hora||''))}</span></div></div><div class="ticket-client"><div class="ticket-client-label">Cliente</div><div class="ticket-client-name">${esc(order.cliente||'Sin nombre')}</div>${order.telefono?`<div style="font-size:11px;color:#666;margin-top:2px">📞 ${esc(order.telefono)}</div>`:''}</div><div class="ticket-items"><div class="ticket-items-title">Detalle del Pedido</div>${itemsHtml||`<div>${esc(order.pedido||'—')}</div>`}</div>${order.extras?`<div style="font-size:11px;color:#666;margin-bottom:4px">📝 ${esc(order.extras)}</div>`:''} ${order.entrega?`<div class="ticket-info-row"><span class="ticket-info-label">ENTREGA</span><span class="ticket-info-value">${esc(order.entrega)}</span></div>`:''} ${order.direccion?`<div class="ticket-info-row"><span class="ticket-info-label">DIRECCIÓN</span><span class="ticket-info-value">${esc(order.direccion)}</span></div>`:''} ${order.pago?`<div class="ticket-info-row"><span class="ticket-info-label">PAGO</span><span class="ticket-info-value">${esc(order.pago)}</span></div>`:''} ${order.efectivo?`<div class="ticket-info-row"><span class="ticket-info-label">PAGA CON</span><span class="ticket-info-value">${esc(order.efectivo)}</span></div>`:''} ${paga>0&&dev>0?`<div class="ticket-info-row"><span class="ticket-info-label">DEVUELTA</span><span class="ticket-info-value">$${dev.toLocaleString('es-CO')}</span></div>`:''} ${totalHtml}<div class="ticket-footer"><div>¡Gracias por tu pedido!</div><div class="footer-brand">powered by AIMAX</div></div>`;
+  document.getElementById('printModalOverlay').classList.remove('hidden');
+}
+function closePrintModal(){document.getElementById('printModalOverlay').classList.add('hidden');}
+document.getElementById('printModalOverlay').addEventListener('click',function(e){if(e.target===this)closePrintModal();});
+document.getElementById('zModalOverlay').addEventListener('click',function(e){if(e.target===this)this.classList.add('hidden');});
+
+/* ── SYNC ── */
+function updateLastSync(){const n=new Date();document.getElementById('metricLastUpdate').textContent=`${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}`;}
+function setSyncOk(){const d=document.querySelector('.sync-dot'),l=document.querySelector('.sync-label');if(d)d.style.background='#52c07a';if(l){l.textContent='En vivo';l.style.color='#52c07a';}}
+function setSyncError(){const d=document.querySelector('.sync-dot'),l=document.querySelector('.sync-label');if(d)d.style.background='#e05252';if(l){l.textContent='Sin conexión';l.style.color='#e05252';}}
+
+/* ── NAV ── */
+function showSection(name){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const sec=document.getElementById('section-'+name);
+  if(sec) sec.classList.add('active');
+  const titles={orders:'Pedidos',ventas:'Ventas',clientes:'Clientes',horas:'Por Horas',metrics:'Métricas',cierre:'Cierre de Caja',config:'Configuración'};
+  document.getElementById('pageTitle').textContent=titles[name]||name;
+  const navItems=document.querySelectorAll('.nav-item');
+  const idx={orders:0,ventas:1,clientes:2,horas:3,metrics:4,cierre:5,config:6};
+  if(navItems[idx[name]]!==undefined) navItems[idx[name]].classList.add('active');
+  closeSidebar();
+  if(name==='metrics') updateMetrics();
+  if(name==='ventas') renderVentas();
+  if(name==='clientes') renderClientes();
+  if(name==='horas') renderHoras();
+  if(name==='cierre') { actualizarFechaCierre(); }
+}
+
+/* ── SIDEBAR MOBILE ── */
+function toggleSidebar(){const s=document.querySelector('.sidebar'),o=getOrCreateOverlay();if(s.classList.contains('open')){closeSidebar();}else{s.classList.add('open');o.classList.add('visible');}}
+function closeSidebar(){document.querySelector('.sidebar').classList.remove('open');const o=document.querySelector('.sidebar-overlay');if(o)o.classList.remove('visible');}
+function getOrCreateOverlay(){let o=document.querySelector('.sidebar-overlay');if(!o){o=document.createElement('div');o.className='sidebar-overlay';o.onclick=closeSidebar;document.body.appendChild(o);}return o;}
+
+/* ── CONFIG ── */
+function saveSupabaseConfig(){
+  const url=document.getElementById('supabaseUrlInput').value.trim();
+  const key=document.getElementById('supabaseKeyInput').value.trim();
+  const table=document.getElementById('supabaseTableInput').value.trim()||'pedidos';
+  const msg=document.getElementById('supabaseMsg');
+  if(!url||!key){msg.style.color='#e05252';msg.textContent='Completa la URL y la API Key.';return;}
+  CONFIG.supabaseUrl=url;CONFIG.supabaseKey=key;CONFIG.supabaseTable=table;
+  localStorage.setItem('aimax_sb_url',url);localStorage.setItem('aimax_sb_key',key);localStorage.setItem('aimax_sb_table',table);
+  msg.style.color='#888';msg.textContent='⏳ Conectando con Supabase...';
+  fetchOrders();
+}
+function changePassword(){
+  const p1=document.getElementById('newPassInput').value,p2=document.getElementById('newPassConfirm').value;
+  const msg=document.getElementById('passMsg');
+  if(!p1||p1.length<4){msg.style.color='#e05252';msg.textContent='Mínimo 4 caracteres.';return;}
+  if(p1!==p2){msg.style.color='#e05252';msg.textContent='Las contraseñas no coinciden.';return;}
+  CONFIG.password=p1;localStorage.setItem('aimax_password',p1);
+  msg.style.color='#52c07a';msg.textContent='Contraseña cambiada ✓';
+  document.getElementById('newPassInput').value=document.getElementById('newPassConfirm').value='';
+}
+function saveRestaurantName(){
+  const name=document.getElementById('restaurantNameInput').value.trim();
+  if(!name) return;
+  CONFIG.restaurantName=name;localStorage.setItem('aimax_name',name);showMsg('Nombre guardado ✓','green');
+}
+
+/* ── CATÁLOGO ── */
+function saveCatalogo(){
+  const raw=document.getElementById('catalogoInput').value;
+  const platos=raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  localStorage.setItem('aimax_catalogo',JSON.stringify(platos));
+  const msg=document.getElementById('catalogoMsg');
+  msg.style.color='#52c07a';
+  msg.textContent=`✓ ${platos.length} platos guardados`;
+  showMsg(`Catálogo guardado: ${platos.length} platos ✓`,'green');
+}
+function getCatalogo(){
+  try{return JSON.parse(localStorage.getItem('aimax_catalogo')||'[]');}catch{return[];}
+}
+function showMsg(text,color){
+  const t=document.createElement('div');
+  t.textContent=text;
+  t.style.cssText=`position:fixed;bottom:24px;right:24px;background:${color==='green'?'#52c07a':'#e05252'};color:#000;padding:10px 18px;font-weight:600;font-size:13px;border-radius:4px;z-index:9999`;
+  document.body.appendChild(t);setTimeout(()=>t.remove(),2500);
+}
+
+/* ── EXPORT ── */
+function toggleExportMenu(){document.getElementById('exportMenu').classList.toggle('open');}
+function closeExportMenu(){document.getElementById('exportMenu').classList.remove('open');}
+document.addEventListener('click',e=>{if(!e.target.closest('#exportDropdown'))closeExportMenu();});
+function getFilteredSorted(){return[...filterOrders(allOrders)].sort((a,b)=>a.dateObj-b.dateObj);}
+function getPeriodLabel(){
+  if(currentFilter==='custom'&&customDateFilter) return customDateFilter;
+  return{day:'Hoy',week:'Esta Semana',month:'Este Mes',year:'Este Año',all:'Todos los Pedidos'}[currentFilter]||'Pedidos';
+}
+function exportExcel(){
+  const orders=getFilteredSorted();if(!orders.length){showMsg('No hay pedidos','red');return;}
+  const period=getPeriodLabel();const lim=v=>String(v||'').replace(/[•\-\*]\s*/g,'').replace(/\s+/g,' ').trim();
+  const filas=orders.map((o,i)=>{const platos=o.items&&o.items.length>0?o.items.map(p=>`<p style="margin:2px 0">${lim(p)}</p>`).join(''):lim(o.pedido);return`<tr><td style="text-align:center">${i+1}</td><td>${o.fecha}</td><td>${o.hora||''}</td><td><b>${lim(o.cliente)}</b><br>${o.telefono||''}</td><td style="min-width:180px">${platos}</td><td>${o.entrega||''}</td><td>${lim(o.direccion||'')}</td><td>${lim(o.pago||'')}</td><td style="font-weight:bold">${String(o.total||'').trim()}</td></tr>`;}).join('');
+  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:11px}table{border-collapse:collapse;width:100%}th{background:#111;color:#D4AF37;padding:8px;text-align:left;font-size:13px;text-transform:uppercase}td{padding:8px;vertical-align:top;border:1px solid #ddd;font-size:14px}tr:nth-child(even) td{background:#fafafa}</style></head><body><table><thead><tr><th>#</th><th>Fecha</th><th>Hora</th><th>Cliente</th><th>Platos</th><th>Entrega</th><th>Dirección</th><th>Pago</th><th>Total</th></tr></thead><tbody>${filas}</tbody></table></body></html>`;
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([html],{type:'application/vnd.ms-excel;charset=utf-8;'})),download:`AIMAX_Pedidos_${period.replace(/ /g,'_')}.xls`});
+  a.click();URL.revokeObjectURL(a.href);showMsg('Excel descargado ✓','green');
+}
+function exportPDF(){
+  const orders=getFilteredSorted();if(!orders.length){showMsg('No hay pedidos','red');return;}
+  const rName=CONFIG.restaurantName||'Restaurante';const period=getPeriodLabel();
+  const fecha=new Date().toLocaleDateString('es-CO',{day:'2-digit',month:'long',year:'numeric'});
+  const rows=orders.map((o,i)=>`<tr><td>${i+1}</td><td>${o.fecha}</td><td>${o.hora||'—'}</td><td><strong>${o.cliente}</strong>${o.telefono?'<br><small>'+o.telefono+'</small>':''}</td><td>${o.items&&o.items.length>0?o.items.map(i=>'• '+i.replace(/^[•\-\*]\s*/,'')).join('<br>'):o.pedido}</td><td>${o.entrega||'—'}</td><td>${o.direccion||'—'}</td><td>${o.pago||'—'}</td><td class="total">${o.total}</td></tr>`).join('');
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Reporte ${period}</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:11px;color:#111;padding:24px}h1{font-size:20px;letter-spacing:2px}table{width:100%;border-collapse:collapse;margin-top:8px}th{background:#111;color:#D4AF37;font-size:10px;padding:8px;text-align:left;text-transform:uppercase}td{padding:7px 10px;border-bottom:1px solid #eee;vertical-align:top}td.total{font-weight:700}@media print{body{padding:12px}}</style></head><body><h1>AIMAX — ${rName}</h1><p>Reporte ${period} · Generado el ${fecha} · ${orders.length} pedidos</p><table><thead><tr><th>#</th><th>Fecha</th><th>Hora</th><th>Cliente</th><th>Platos</th><th>Entrega</th><th>Dirección</th><th>Pago</th><th>Total</th></tr></thead><tbody>${rows}</tbody></table><script>window.onload=()=>window.print();<\/script></body></html>`;
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8;'})),download:`AIMAX_Reporte_${period.replace(/ /g,'_')}.html`});
+  a.click();URL.revokeObjectURL(a.href);showMsg('PDF descargado ✓','green');
+}
+function escHtml(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ── AUTO-START ──
+window.addEventListener('DOMContentLoaded', () => { initApp(); });
+</script>
+</body>
+</html>
+
