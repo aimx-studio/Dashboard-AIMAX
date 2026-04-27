@@ -440,6 +440,7 @@ a{text-decoration:none;cursor:pointer}
         <div class="section-header-actions">
           <select id="ventasMesFilter" class="config-input" style="width:auto;padding:6px 12px" onchange="renderVentas()">
             <option value="month" selected>Este mes</option><option value="day">Hoy</option>
+            <option value="yesterday">Ayer</option>
             <option value="week">Esta semana</option><option value="year">Este año</option><option value="all">Todo</option>
           </select>
           <input type="date" id="ventasCustomDate" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace;display:none" onchange="renderVentas()" title="Filtrar ventas por fecha específica"/>
