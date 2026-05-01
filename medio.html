@@ -645,13 +645,17 @@ function filterOrders(orders,period){
 
 /* REVENUE STRIP */
 function updateRevenueStrip(){
-  const t=filterOrders(allOrders,'day').reduce((a,o)=>a+parseTotal(o.total),0);
+  const t=filterOrders(allOrders).reduce((a,o)=>a+parseTotal(o.total),0);
   const el=document.getElementById('revToday');
   if(el) el.textContent=formatMoney(t);
+  const label=document.querySelector('#section-orders .metric-label');
+  const labels={day:'VENTAS HOY',yesterday:'VENTAS AYER',week:'VENTAS SEMANA',month:'VENTAS MES',year:'VENTAS AÑO',all:'VENTAS TOTAL',custom:'VENTAS FECHA'};
+  if(label) label.textContent=labels[currentFilter]||'VENTAS';
 }
 
 /* RENDER ORDERS */
 function renderOrders(){
+  updateRevenueStrip();
   const grid=document.getElementById('ordersGrid');
   const filtered=filterOrders(allOrders);
   document.getElementById('ordersCount').textContent=`${filtered.length} pedido${filtered.length!==1?'s':''}`;
