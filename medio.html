@@ -296,7 +296,7 @@ a{text-decoration:none;cursor:pointer}
         </div>
       </div>
       <div class="metrics-grid" style="margin-bottom:20px">
-        <div class="metrics-big-card"><span class="mbcard-label">💵 Ventas Hoy</span><span class="mbcard-number" id="vToday">$0</span></div>
+        <div class="metrics-big-card"><span class="mbcard-label" id="vActivoLabel">💵 Ventas Hoy</span><span class="mbcard-number" id="vActivo">$0</span></div>
         <div class="metrics-big-card"><span class="mbcard-label">📅 Esta Semana</span><span class="mbcard-number" id="vWeek">$0</span></div>
         <div class="metrics-big-card"><span class="mbcard-label">🗓️ Este Mes</span><span class="mbcard-number" id="vMonth">$0</span></div>
         <div class="metrics-big-card gold"><span class="mbcard-label">🏆 Este Año</span><span class="mbcard-number" id="vYear">$0</span></div>
@@ -666,7 +666,7 @@ function createOrderCard(order){
   const itemsHtml=order.items.length>0?order.items.map(i=>`<div class="order-item-line">• ${escHtml(i)}</div>`).join(''):`<div class="order-item-line">${escHtml(order.pedido||'—')}</div>`;
   const badge=order.entrega?`<span class="entrega-badge ${order.entrega.toLowerCase().includes('dom')?'badge-dom':'badge-local'}">${escHtml(order.entrega)}</span>`:'';
   return`<div class="order-card" id="${order.id}">
-    <div class="order-card-header"><div><div class="order-number">#${String(order.index).padStart(3,'0')} ${badge}</div><div class="order-client">${escHtml(order.cliente)}</div>${order.telefono?`<div class="order-meta">📞 ${escHtml(order.telefono)}</div>`:''}</div><div class="order-time">${escHtml(order.hora)}</div></div>
+    <div class="order-card-header"><div><div class="order-number">#${String(order.index).padStart(3,'0')} ${badge}</div><div class="order-client">${escHtml(order.cliente)}</div>${order.telefono?`<div class="order-meta">📞 ${escHtml(order.telefono)}</div>`:''}</div><button onclick="deleteOrder('${order.id}','${order.index}')" title="Eliminar" style="background:none;border:1px solid #2a1a1a;color:#555;cursor:pointer;border-radius:4px;padding:2px 7px;font-size:11px;display:block;margin-bottom:4px" onmouseover="this.style.color='#e05252';this.style.borderColor='#e05252'" onmouseout="this.style.color='#555';this.style.borderColor='#2a1a1a'">✕</button><div class="order-time">${escHtml(order.hora)}</div></div>
     <div class="order-divider"></div>
     <div class="order-items">${itemsHtml}</div>
     ${order.direccion?`<div class="order-meta-row"><span class="order-meta-label">📍 Dirección</span><span class="order-meta-val">${escHtml(order.direccion)}</span></div>`:''}
@@ -708,11 +708,24 @@ function renderVentas(){
   const filtroSel=document.getElementById('ventasMesFilter')?.value||'all';
   const filtro = useCustomDate ? 'custom_date:'+customDateInp.value : filtroSel;
   const base=filterOrders(allOrders, filtro==='all'?undefined:filtro);
-  ['day','week','month','year'].forEach((p,i)=>{
+
+  // Tarjeta 1: refleja el filtro activo con label dinámico
+  const activoTotal=base.reduce((a,o)=>a+parseTotal(o.total),0);
+  const labelMap={day:'💵 Ventas Hoy',yesterday:'💵 Ventas Ayer',week:'📅 Esta Semana',month:'🗓️ Este Mes',year:'🏆 Este Año',all:'💵 Total General'};
+  const activoLabel=useCustomDate?'📅 '+customDateInp.value:(labelMap[filtroSel]||'💵 Ventas');
+  const lbl=document.getElementById('vActivoLabel');
+  const val=document.getElementById('vActivo');
+  if(lbl) lbl.textContent=activoLabel;
+  if(val) val.textContent=formatMoney(activoTotal);
+
+  // Tarjetas 2-4: siempre fijas semana/mes/año
+  ['week','month','year'].forEach((p,i)=>{
     const t=filterOrders(allOrders,p).reduce((a,o)=>a+parseTotal(o.total),0);
-    const el=document.getElementById(['vToday','vWeek','vMonth','vYear'][i]);
+    const el=document.getElementById(['vWeek','vMonth','vYear'][i]);
     if(el) el.textContent=formatMoney(t);
   });
+
+  // Modalidades según filtro activo
   const localO=base.filter(o=>o.entrega&&o.entrega.toLowerCase().includes('recoger'));
   const domO=base.filter(o=>o.entrega&&o.entrega.toLowerCase().includes('domicilio'));
   const comerO=base.filter(o=>o.entrega&&o.entrega.toLowerCase().includes('comer'));
@@ -861,6 +874,22 @@ function showSection(name){
   if(navItems[idx[name]]!==undefined) navItems[idx[name]].classList.add('active');
   closeSidebar();
   if(name==='ventas') renderVentas();
+}
+
+async function deleteOrder(localId, supabaseId) {
+  if (!confirm(`¿Eliminar pedido #${String(supabaseId).padStart(3,'0')}?`)) return;
+  if (CONFIG.supabaseUrl && CONFIG.supabaseKey) {
+    try {
+      const res = await fetch(
+        `${CONFIG.supabaseUrl}/rest/v1/${CONFIG.supabaseTable}?id=eq.${supabaseId}`,
+        { method: 'DELETE', headers: { 'apikey': CONFIG.supabaseKey, 'Authorization': `Bearer ${CONFIG.supabaseKey}` } }
+      );
+      if (!res.ok) throw new Error(res.status);
+    } catch(e) { showMsg('Error al eliminar', 'red'); return; }
+  }
+  allOrders = allOrders.filter(o => o.id !== localId);
+  renderOrders(); updateMetrics(); updateRevenueStrip();
+  showMsg('Pedido eliminado ✓', 'green');
 }
 
 /* AUTO-START */
