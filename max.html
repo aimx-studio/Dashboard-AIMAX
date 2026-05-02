@@ -907,9 +907,8 @@ function parseTotal(s){
   return isNaN(n)?0:n;
 }
 function formatMoney(n){
-  if(n>=1000000) return '$'+(n/1000000).toFixed(1)+'M';
-  if(n>=1000) return '$'+Math.round(n).toLocaleString('es-CO');
-  return '$'+Math.round(n);
+  if(n>=1000000) return '$'+(n/1000000).toFixed(2).replace('.',',')+'M';
+  return '$'+n.toLocaleString('es-CO');
 }
 
 /* ── DEMO DATA ── */
