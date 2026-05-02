@@ -434,7 +434,7 @@ async function fetchOrders(){
   }
   showNoDbBanner(false);
   try {
-    const url=`${CONFIG.supabaseUrl}/rest/v1/${CONFIG.supabaseTable||'pedidos'}?select=*&order=Fecha.desc&limit=5000`;
+    const url=`${CONFIG.supabaseUrl}/rest/v1/${CONFIG.supabaseTable||'pedidos'}?select=*&order=created_at.asc&limit=5000`;
     const res=await fetch(url,{headers:{'apikey':CONFIG.supabaseKey,'Authorization':`Bearer ${CONFIG.supabaseKey}`,'Content-Type':'application/json'}});
     if(!res.ok) throw new Error(res.status);
     const rows=await res.json();
@@ -472,8 +472,9 @@ function parseSupabaseRow(row,idx){
   const hm=fechaRaw.match(/(\d{1,2}:\d{2}(:\d{2})?)/);
   if(hm&&!hora) hora=hm[1];
   const fecha=fechaRaw.replace(/\s+\d{1,2}:\d{2}(:\d{2})?/,'').trim();
-  const dateObj=parseDate(fechaRaw,hora);
-  return{id:`order-${row.id||idx+1}`,index:row.id||idx+1,fecha,hora,cliente,telefono,pedido,entrega,direccion,pago,total,extras,efectivo,dateObj,items:parseItems(pedido)};
+  const createdAt=row.created_at||'';
+const dateObj=createdAt?new Date(createdAt):parseDate(fechaRaw,hora);
+  return{id:`order-${row.id||idx+1}`,index:idx+1,fecha,hora,cliente,telefono,pedido,entrega,direccion,pago,total,extras,efectivo,dateObj,items:parseItems(pedido)};
 }
 function parseDate(fecha,hora){
   if(!fecha) return new Date();
