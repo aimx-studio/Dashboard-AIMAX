@@ -907,7 +907,6 @@ function parseTotal(s){
   return isNaN(n)?0:n;
 }
 function formatMoney(n){
-  if(n>=1000000) return '$'+(n/1000000).toFixed(2).replace('.',',')+'M';
   return '$'+n.toLocaleString('es-CO');
 }
 
@@ -1196,9 +1195,9 @@ function renderVentas(){
   });
 
   // Modalidades según filtro activo
-  const localO=base.filter(o=>o.entrega&&o.entrega.toLowerCase().includes('recoger'));
-  const domO=base.filter(o=>o.entrega&&o.entrega.toLowerCase().includes('domicilio'));
-  const comerO=base.filter(o=>o.entrega&&o.entrega.toLowerCase().includes('comer'));
+  const localO=base.filter(o=>o.entrega&&o.entrega.toLowerCase().includes('comer'));
+const domO=base.filter(o=>o.entrega&&o.entrega.toLowerCase().includes('domicilio'));
+const comerO=base.filter(o=>o.entrega&&o.entrega.toLowerCase().includes('recoger'));
   document.getElementById('vLocal').textContent=formatMoney(localO.reduce((a,o)=>a+parseTotal(o.total),0));
   document.getElementById('vLocalCount').textContent=localO.length;
   document.getElementById('vDom').textContent=formatMoney(domO.reduce((a,o)=>a+parseTotal(o.total),0));
