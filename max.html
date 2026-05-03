@@ -1306,14 +1306,20 @@ function renderHoras(){renderPedidosPorHora();renderHorasDia();renderRangoHorari
 function renderPedidosPorHora(){
   const orders=filterOrders(allOrders,horasPeriodo);
   const byHour=Array(24).fill(0);
-  orders.forEach(o=>byHour[o.dateObj.getHours()]++);
+  orders.forEach(o=>{
+  const d=new Date((o.fecha+' '+o.hora).replace(/(\d{1,2})\/(\d{1,2})\/(\d{4})/,'$3-$2-$1'));
+  if(!isNaN(d)) byHour[d.getHours()]++;
+});
   const maxVal=Math.max(...byHour,1);
   document.getElementById('horasChart').innerHTML=`<div class="horas-bar-chart">${byHour.map((count,h)=>{const pct=Math.round(count/maxVal*100);const label=`${String(h).padStart(2,'0')}:00`;return`<div class="hora-bar-item ${count===Math.max(...byHour)&&count>0?'hora-peak':''}"><div class="hora-bar-wrap"><div class="hora-bar-fill" style="height:${pct}%" title="${count} pedidos a las ${label}"></div></div><div class="hora-bar-count">${count>0?count:''}</div><div class="hora-bar-label">${h%2===0?label:''}</div></div>`;}).join('')}</div>`;
 }
 function renderHorasDia(){
   const dias=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
   const matriz=Array.from({length:24},()=>Array(7).fill(0));
-  allOrders.forEach(o=>{matriz[o.dateObj.getHours()][o.dateObj.getDay()]++;});
+  allOrders.forEach(o=>{
+  const d=new Date((o.fecha+' '+o.hora).replace(/(\d{1,2})\/(\d{1,2})\/(\d{4})/,'$3-$2-$1'));
+  if(!isNaN(d)) matriz[d.getHours()][d.getDay()]++;
+});
   const maxVal=Math.max(...matriz.flat(),1);
   document.getElementById('horasDiaChart').innerHTML=`<div style="overflow-x:auto"><table class="horas-tabla"><thead><tr><th>Hora</th>${dias.map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>${matriz.map((row,h)=>{const rt=row.reduce((a,b)=>a+b,0);if(!rt) return '';return`<tr><td class="horas-tabla-hora">${String(h).padStart(2,'0')}:00</td>${row.map(v=>{const i=v>0?Math.round(v/maxVal*100):0;return`<td class="horas-cell ${i>60?'hot':i>30?'warm':i>0?'cool':''}" title="${v} pedidos">${v>0?v:''}</td>`;}).join('')}</tr>`;}).join('')}</tbody></table></div>`;
 }
