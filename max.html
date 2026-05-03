@@ -884,8 +884,13 @@ function parseSupabaseRow(row,idx){
   if(hm&&!hora) hora=hm[1];
   const fecha=fechaRaw.replace(/\s+\d{1,2}:\d{2}(:\d{2})?/,'').trim();
   const createdAt=row.created_at||'';
-const dateObj=createdAt?new Date(createdAt):parseDate(fechaRaw,hora);
+const dateObj=createdAt?toColombiaDate(createdAt):parseDate(fechaRaw,hora);
   return{id:`order-${row.id||idx+1}`,index:idx+1,fecha,hora,cliente,telefono,pedido,entrega,direccion,pago,total,extras,efectivo,dateObj,items:parseItems(pedido)};
+}
+function toColombiaDate(utcString) {
+  // Colombia es UTC-5, sin horario de verano
+  const d = new Date(utcString);
+  return new Date(d.getTime() - (5 * 60 * 60 * 1000));
 }
 function parseDate(fecha,hora){
   if(!fecha) return new Date();
