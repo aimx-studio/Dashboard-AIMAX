@@ -634,10 +634,7 @@ function filterOrders(orders,period){
       const yStart=new Date(todayStart.getTime()); yStart.setDate(yStart.getDate()-1);
       return orders.filter(o=>o.dateObj>=yStart&&o.dateObj<todayStart);
     }
-    case 'week': {
-      const ws=new Date(todayStart.getTime()); ws.setDate(ws.getDate()-opDay.getDay());
-      return orders.filter(o=>o.dateObj>=ws);
-    }
+    case 'week': { const ws = new Date(opDay); const day = opDay.getDay(); ws.setDate(opDay.getDate() - (day === 0 ? 6 : day - 1)); ws.setHours(3,0,0,0); return orders.filter(o => o.dateObj >= ws); }
     case 'month':
       return orders.filter(o=>o.dateObj>=new Date(opDay.getFullYear(),opDay.getMonth(),1,3,0,0));
     case 'year':

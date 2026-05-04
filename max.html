@@ -340,6 +340,12 @@ a{text-decoration:none;cursor:pointer}
       <a class="nav-item" onclick="showSection('metrics')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Métricas</span>
       </a>
+
+      <!-- Productos -->
+      <a class="nav-item" onclick="showSection('productos')">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span>Productos</span>
+</a>
+
       <!-- NUEVO: Cierre de Caja -->
       <a class="nav-item" onclick="showSection('cierre')" style="border:1px solid rgba(212,175,55,.2);margin-top:8px">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span>Cierre de Caja</span>
@@ -683,6 +689,67 @@ a{text-decoration:none;cursor:pointer}
 
       </div><!-- /cierre-resumen -->
     </section>
+
+     <!-- ── PRODUCTOS ── -->
+<section id="section-productos" class="section">
+  <div class="section-header"><h2>Análisis de Productos</h2></div>
+
+  <!-- Buscador -->
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:flex-end">
+    <div style="flex:1;min-width:200px">
+      <label style="display:block;font-size:10px;letter-spacing:2px;color:var(--grey);text-transform:uppercase;margin-bottom:6px">Buscar producto</label>
+      <input type="text" id="prodSearch" class="config-input" placeholder="Ej: Perro Clásico..." oninput="renderProductos()"/>
+    </div>
+    <div>
+      <label style="display:block;font-size:10px;letter-spacing:2px;color:var(--grey);text-transform:uppercase;margin-bottom:6px">Período</label>
+      <select id="prodPeriodo" class="config-input" style="width:auto;padding:6px 12px" onchange="renderProductos()">
+        <option value="day">Hoy</option>
+        <option value="yesterday">Ayer</option>
+        <option value="week">Esta semana</option>
+        <option value="month" selected>Este mes</option>
+        <option value="year">Este año</option>
+        <option value="all">Todo</option>
+      </select>
+    </div>
+    <div>
+      <label style="display:block;font-size:10px;letter-spacing:2px;color:var(--grey);text-transform:uppercase;margin-bottom:6px">Fecha exacta</label>
+      <input type="date" id="prodFecha" class="config-input" style="width:160px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="renderProductos()"/>
+    </div>
+  </div>
+
+  <!-- Stats del producto seleccionado -->
+  <div id="prodDetalle" style="display:none;margin-bottom:20px">
+    <div style="background:var(--black3);border:1px solid var(--gold3);padding:20px 24px;margin-bottom:16px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--gold)" id="prodDetalleNombre">—</div>
+      <div style="font-size:12px;color:var(--grey);margin-top:2px" id="prodDetallePeriodo"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:16px">
+      <div class="metrics-big-card"><span class="mbcard-label">Unidades vendidas</span><span class="mbcard-number" id="prodUnidades" style="font-size:40px">0</span></div>
+      <div class="metrics-big-card"><span class="mbcard-label">En pedidos</span><span class="mbcard-number" id="prodPedidos" style="font-size:40px">0</span></div>
+      <div class="metrics-big-card gold"><span class="mbcard-label">% del total período</span><span class="mbcard-number" id="prodPct" style="font-size:40px">0%</span></div>
+      <div class="metrics-big-card"><span class="mbcard-label">Última venta</span><span class="mbcard-number" id="prodUltima" style="font-size:22px;line-height:1.3">—</span></div>
+    </div>
+    <!-- Clientes que más lo piden -->
+    <div class="top-products-card" style="margin-bottom:16px">
+      <h3 class="tpc-title" style="margin-bottom:14px">👥 Clientes que más lo piden</h3>
+      <div id="prodClientes" class="top-products-list"></div>
+    </div>
+    <!-- Ventas día a día -->
+    <div class="top-products-card">
+      <h3 class="tpc-title" style="margin-bottom:14px">📅 Ventas por día</h3>
+      <div id="prodDiasChart"></div>
+    </div>
+  </div>
+
+  <!-- Lista general de todos los productos -->
+  <div class="top-products-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+      <h3 class="tpc-title" style="margin-bottom:0">📦 Todos los Productos</h3>
+      <span style="font-size:11px;color:var(--grey)" id="prodListLabel">en el período seleccionado</span>
+    </div>
+    <div id="prodLista"></div>
+  </div>
+</section>
 
     <!-- ── CONFIG ── -->
     <section id="section-config" class="section">
@@ -1077,10 +1144,7 @@ function filterOrders(orders,period){
       const yStart=new Date(todayStart.getTime()); yStart.setDate(yStart.getDate()-1);
       return orders.filter(o=>o.dateObj>=yStart&&o.dateObj<todayStart);
     }
-    case 'week': {
-      const ws=new Date(todayStart.getTime()); ws.setDate(ws.getDate()-opDay.getDay());
-      return orders.filter(o=>o.dateObj>=ws);
-    }
+    case 'week': { const ws = new Date(opDay); const day = opDay.getDay(); ws.setDate(opDay.getDate() - (day === 0 ? 6 : day - 1)); ws.setHours(3,0,0,0); return orders.filter(o => o.dateObj >= ws); }
     case 'month':
       return orders.filter(o=>o.dateObj>=new Date(opDay.getFullYear(),opDay.getMonth(),1,3,0,0));
     case 'year':
@@ -1762,16 +1826,17 @@ function showSection(name){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const sec=document.getElementById('section-'+name);
   if(sec) sec.classList.add('active');
-  const titles={orders:'Pedidos',ventas:'Ventas',clientes:'Clientes',horas:'Por Horas',metrics:'Métricas',cierre:'Cierre de Caja',config:'Configuración'};
+  const titles={orders:'Pedidos',ventas:'Ventas',clientes:'Clientes',horas:'Por Horas',metrics:'Métricas',productos:'Productos',cierre:'Cierre de Caja',config:'Configuración'};
   document.getElementById('pageTitle').textContent=titles[name]||name;
   const navItems=document.querySelectorAll('.nav-item');
-  const idx={orders:0,ventas:1,clientes:2,horas:3,metrics:4,cierre:5,config:6};
+  const idx={orders:0,ventas:1,clientes:2,horas:3,metrics:4,productos:5,cierre:6,config:7};
   if(navItems[idx[name]]!==undefined) navItems[idx[name]].classList.add('active');
   closeSidebar();
   if(name==='metrics') updateMetrics();
   if(name==='ventas') renderVentas();
   if(name==='clientes') renderClientes();
   if(name==='horas') renderHoras();
+if(name==='productos') renderProductos();
   if(name==='cierre') { actualizarFechaCierre(); }
 }
 
@@ -1854,6 +1919,143 @@ function exportPDF(){
   a.click();URL.revokeObjectURL(a.href);showMsg('PDF descargado ✓','green');
 }
 function escHtml(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+  /* ── PRODUCTOS ── */
+function renderProductos(){
+  const busq=(document.getElementById('prodSearch')?.value||'').toLowerCase().trim();
+  const fechaInp=document.getElementById('prodFecha')?.value;
+  const periodo=fechaInp?'custom_date:'+fechaInp:(document.getElementById('prodPeriodo')?.value||'month');
+  const orders=filterOrders(allOrders,periodo);
+
+  // Frecuencia global del período
+  const freq=getProductFreq(orders);
+  const totalUnidades=Object.values(freq).reduce((a,b)=>a+b,0);
+  const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]);
+  const maxVal=sorted.length?sorted[0][1]:1;
+
+  // Lista general
+  const lista=document.getElementById('prodLista');
+  const periodoLabels={day:'Hoy',yesterday:'Ayer',week:'Esta semana',month:'Este mes',year:'Este año',all:'Todo'};
+  const pLabel=fechaInp?fechaInp:(periodoLabels[document.getElementById('prodPeriodo')?.value]||'');
+  document.getElementById('prodListLabel').textContent='en '+pLabel+' · '+sorted.length+' productos';
+
+  if(!sorted.length){
+    lista.innerHTML='<p style="color:#555;font-size:13px">Sin ventas en este período</p>';
+    document.getElementById('prodDetalle').style.display='none';
+    return;
+  }
+  lista.innerHTML=sorted.map(([name,count],i)=>{
+    const pct=totalUnidades>0?Math.round(count/totalUnidades*100):0;
+    const activo=busq&&name.toLowerCase().includes(busq);
+    return`<div onclick="seleccionarProducto('${escHtml(name).replace(/'/g,"\\'")}',${i})"
+      style="border:1px solid ${activo?'var(--gold)':'#1a1a1a'};background:${activo?'rgba(212,175,55,0.06)':'transparent'};
+      padding:10px 14px;border-radius:4px;margin-bottom:6px;cursor:pointer;transition:all .2s"
+      onmouseover="this.style.borderColor='var(--gold3)'" onmouseout="this.style.borderColor='${activo?'var(--gold)':'#1a1a1a'}'">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${i===0?'var(--gold)':'var(--grey2)'};min-width:28px">#${i+1}</span>
+        <div style="flex:1">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-size:13px;color:#f5f5f5">${escHtml(name)}</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:${i===0?'var(--gold)':'var(--grey)'}">${count} und. · ${pct}%</span>
+          </div>
+          <div style="height:3px;background:#1a1a1a;border-radius:2px">
+            <div style="height:3px;width:${Math.round(count/maxVal*100)}%;background:${i===0?'var(--gold)':'#444'};border-radius:2px"></div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Si hay búsqueda activa, mostrar detalle del primer match
+  if(busq){
+    const match=sorted.find(([n])=>n.toLowerCase().includes(busq));
+    if(match) seleccionarProducto(match[0]);
+    else document.getElementById('prodDetalle').style.display='none';
+  }
+}
+
+function seleccionarProducto(nombre){
+  const fechaInp=document.getElementById('prodFecha')?.value;
+  const periodo=fechaInp?'custom_date:'+fechaInp:(document.getElementById('prodPeriodo')?.value||'month');
+  const orders=filterOrders(allOrders,periodo);
+  const periodoLabels={day:'Hoy',yesterday:'Ayer',week:'Esta semana',month:'Este mes',year:'Este año',all:'Todo'};
+  const pLabel=fechaInp?fechaInp:(periodoLabels[document.getElementById('prodPeriodo')?.value]||'');
+
+  // Filtrar pedidos que contienen este producto
+  function tieneProducto(order){
+    return order.items.some(item=>{
+      const clean=item.replace(/^\d+[x×]\s*/i,'').replace(/^(.+?)\s*[×x]\s*\d+$/i,'$1').replace(/^[•\s]+/,'').trim();
+      return clean.toLowerCase()===nombre.toLowerCase();
+    });
+  }
+  function getCantidad(order){
+    let total=0;
+    order.items.forEach(item=>{
+      const m1=item.match(/^(\d+)\s*[×x]\s*(.+)/i);
+      const m2=item.match(/^(.+?)\s*[×x]\s*(\d+)$/i);
+      const qty=m1?parseInt(m1[1]):m2?parseInt(m2[2]):1;
+      const clean=m1?m1[2].trim():m2?m2[1].trim():item.trim();
+      if(clean.toLowerCase()===nombre.toLowerCase()) total+=qty;
+    });
+    return total;
+  }
+
+  const matchOrders=orders.filter(tieneProducto);
+  const totalUnid=matchOrders.reduce((a,o)=>a+getCantidad(o),0);
+  const totalPedidos=matchOrders.length;
+  const freqGlobal=getProductFreq(orders);
+  const totalGlobal=Object.values(freqGlobal).reduce((a,b)=>a+b,0);
+  const pct=totalGlobal>0?Math.round(totalUnid/totalGlobal*100):0;
+  const ultima=matchOrders.length>0?[...matchOrders].sort((a,b)=>b.dateObj-a.dateObj)[0]:null;
+
+  document.getElementById('prodDetalleNombre').textContent=nombre;
+  document.getElementById('prodDetallePeriodo').textContent='Período: '+pLabel+' · '+totalPedidos+' pedido'+( totalPedidos!==1?'s':'');
+  document.getElementById('prodUnidades').textContent=totalUnid;
+  document.getElementById('prodPedidos').textContent=totalPedidos;
+  document.getElementById('prodPct').textContent=pct+'%';
+  document.getElementById('prodUltima').textContent=ultima?ultima.fecha+' '+ultima.hora:'—';
+
+  // Clientes top
+  const clienteFreq={};
+  matchOrders.forEach(o=>{
+    const k=o.cliente.trim();
+    clienteFreq[k]=(clienteFreq[k]||0)+getCantidad(o);
+  });
+  const topCli=Object.entries(clienteFreq).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxCli=topCli.length?topCli[0][1]:1;
+  document.getElementById('prodClientes').innerHTML=topCli.length?topCli.map(([cli,qty])=>
+    `<div class="tpl-item"><span class="tpl-name">${escHtml(cli)}</span><span class="tpl-count">${qty}x</span>
+    <div style="width:80px;height:3px;background:#1a1a1a;border-radius:2px;margin-left:8px">
+      <div style="height:3px;width:${Math.round(qty/maxCli*100)}%;background:var(--gold);border-radius:2px"></div>
+    </div></div>`
+  ).join(''):'<p style="color:#555;font-size:13px">Sin datos</p>';
+
+  // Ventas por día
+  const byDay={};
+  matchOrders.forEach(o=>{
+    const k=o.fecha||o.dateObj.toLocaleDateString('es-CO');
+    byDay[k]=(byDay[k]||0)+getCantidad(o);
+  });
+  const dias=Object.entries(byDay).sort((a,b)=>{
+    const pa=a[0].split('/').reverse().join('-');
+    const pb=b[0].split('/').reverse().join('-');
+    return pa.localeCompare(pb);
+  });
+  const maxDia=dias.length?Math.max(...dias.map(([,v])=>v)):1;
+  document.getElementById('prodDiasChart').innerHTML=dias.length?
+    `<div class="bar-chart" style="height:120px">${dias.map(([fecha,qty])=>{
+      const pct2=Math.round(qty/maxDia*100);
+      return`<div class="bar-item" style="min-width:40px">
+        <div class="bar-wrap"><div class="bar-fill" style="height:${pct2}%" title="${qty} und."></div></div>
+        <div class="bar-value">${qty}</div>
+        <div class="bar-label" style="font-size:9px">${fecha.slice(0,5)}</div>
+      </div>`;
+    }).join('')}</div>`
+    :'<p style="color:#555;font-size:13px">Sin ventas en este período</p>';
+
+  document.getElementById('prodDetalle').style.display='block';
+  document.getElementById('prodDetalle').scrollIntoView({behavior:'smooth',block:'start'});
+}
 
 async function deleteOrder(localId, supabaseId) {
   if (!confirm(`¿Eliminar pedido #${String(supabaseId).padStart(3,'0')}?`)) return;
