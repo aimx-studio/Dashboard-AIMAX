@@ -702,7 +702,7 @@ a{text-decoration:none;cursor:pointer}
     </div>
     <div>
       <label style="display:block;font-size:10px;letter-spacing:2px;color:var(--grey);text-transform:uppercase;margin-bottom:6px">Período</label>
-      <select id="prodPeriodo" class="config-input" style="width:auto;padding:6px 12px" onchange="renderProductos()">
+      <select id="prodPeriodo" class="config-input" style="width:auto;padding:6px 12px" onchange="document.getElementById('prodFecha').value='';renderProductos()"></select>
         <option value="day">Hoy</option>
         <option value="yesterday">Ayer</option>
         <option value="week">Esta semana</option>
@@ -713,7 +713,7 @@ a{text-decoration:none;cursor:pointer}
     </div>
     <div>
       <label style="display:block;font-size:10px;letter-spacing:2px;color:var(--grey);text-transform:uppercase;margin-bottom:6px">Fecha exacta</label>
-      <input type="date" id="prodFecha" class="config-input" style="width:160px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="renderProductos()"/>
+      <input type="date" id="prodFecha" class="config-input" style="width:160px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="document.getElementById('prodPeriodo').value='month';renderProductos()"/>
     </div>
   </div>
 
