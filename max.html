@@ -2091,7 +2091,10 @@ async function cargarCatalogoDesdeSupabase() {
     );
     const data = await res.json();
     if (data && data[0] && Array.isArray(data[0].menu) && data[0].menu.length > 0) {
-      const platos = data[0].menu;
+      const raw = data[0].menu;
+const platos = Array.isArray(raw) && raw.length > 0 && typeof raw[0] === 'object'
+  ? raw.map(p => p.nombre)
+  : raw;
       localStorage.setItem('aimax_catalogo', JSON.stringify(platos));
       const ci = document.getElementById('catalogoInput');
       if (ci) ci.value = platos.join('\n');
