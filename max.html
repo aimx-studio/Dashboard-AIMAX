@@ -881,7 +881,9 @@ function initApp() {
   if(tblInp) tblInp.value=CONFIG.supabaseTable;
   if(nameInp) nameInp.value=CONFIG.restaurantName;
   const cat=localStorage.getItem('aimax_catalogo');
-  if(cat){try{const arr=JSON.parse(cat);const ci=document.getElementById('catalogoInput');if(ci)ci.value=arr.join('\n');}catch{}}
+if(cat){try{const arr=JSON.parse(cat);const ci=document.getElementById('catalogoInput');if(ci)ci.value=arr.join('\n');}catch{}}
+// Cargar catálogo desde Supabase si hay usuario logueado
+cargarCatalogoDesdeSupabase();
   loadTicketSizeUI();
   actualizarFechaCierre();
   fetchOrders();
@@ -1873,11 +1875,14 @@ function saveRestaurantName(){
 }
 
 /* ── CATÁLOGO ── */
-function saveCatalogo(){
+async function saveCatalogo(){
   const raw=document.getElementById('catalogoInput').value;
   const platos=raw.split('\n').map(l=>l.trim()).filter(Boolean);
   localStorage.setItem('aimax_catalogo',JSON.stringify(platos));
   const msg=document.getElementById('catalogoMsg');
+  msg.style.color='#888';
+  msg.textContent='⏳ Guardando en Supabase...';
+  await guardarCatalogoEnSupabase(platos);
   msg.style.color='#52c07a';
   msg.textContent=`✓ ${platos.length} platos guardados`;
   showMsg(`Catálogo guardado: ${platos.length} platos ✓`,'green');
@@ -2071,6 +2076,49 @@ async function deleteOrder(localId, supabaseId) {
   allOrders = allOrders.filter(o => o.id !== localId);
   renderOrders(); updateMetrics(); updateRevenueStrip();
   showMsg('Pedido eliminado ✓', 'green');
+}
+
+/* ── CATÁLOGO DESDE SUPABASE ── */
+async function cargarCatalogoDesdeSupabase() {
+  const usuario = sessionStorage.getItem('aimax_usuario') || localStorage.getItem('aimax_usuario');
+  if (!usuario) return;
+  try {
+    const SB_URL = 'https://hotryxyvbdbizfivgfft.supabase.co';
+    const SB_KEY = sessionStorage.getItem('aimax_sb_key') || localStorage.getItem('aimax_sb_key');
+    const res = await fetch(
+      `${SB_URL}/rest/v1/aimax_clientes?usuario=eq.${encodeURIComponent(usuario)}&select=menu&limit=1`,
+      { headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` } }
+    );
+    const data = await res.json();
+    if (data && data[0] && Array.isArray(data[0].menu) && data[0].menu.length > 0) {
+      const platos = data[0].menu;
+      localStorage.setItem('aimax_catalogo', JSON.stringify(platos));
+      const ci = document.getElementById('catalogoInput');
+      if (ci) ci.value = platos.join('\n');
+    }
+  } catch(e) { console.warn('No se pudo cargar el catálogo desde Supabase', e); }
+}
+
+async function guardarCatalogoEnSupabase(platos) {
+  const usuario = sessionStorage.getItem('aimax_usuario') || localStorage.getItem('aimax_usuario');
+  if (!usuario) return;
+  try {
+    const SB_URL = 'https://hotryxyvbdbizfivgfft.supabase.co';
+    const SB_KEY = sessionStorage.getItem('aimax_sb_key') || localStorage.getItem('aimax_sb_key');
+    await fetch(
+      `${SB_URL}/rest/v1/aimax_clientes?usuario=eq.${encodeURIComponent(usuario)}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'apikey': SB_KEY,
+          'Authorization': `Bearer ${SB_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ menu: platos })
+      }
+    );
+  } catch(e) { console.warn('Error guardando catálogo en Supabase', e); }
 }
 
 // ── AUTO-START ──
