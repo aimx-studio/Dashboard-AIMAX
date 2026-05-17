@@ -434,11 +434,17 @@ async function fetchOrders(){
   }
   showNoDbBanner(false);
   try {
-    const url=`${CONFIG.supabaseUrl}/rest/v1/${CONFIG.supabaseTable||'pedidos'}?select=*&order=created_at.asc&limit=5000`;
-    const res=await fetch(url,{headers:{'apikey':CONFIG.supabaseKey,'Authorization':`Bearer ${CONFIG.supabaseKey}`,'Content-Type':'application/json'}});
-    if(!res.ok) throw new Error(res.status);
-    const rows=await res.json();
-    allOrders=rows.map((r,i)=>parseSupabaseRow(r,i));
+    let all=[], from=0, pageSize=1000;
+    while(true){
+      const url=`${CONFIG.supabaseUrl}/rest/v1/${CONFIG.supabaseTable||'pedidos'}?select=*&order=created_at.asc&limit=${pageSize}&offset=${from}`;
+      const res=await fetch(url,{headers:{'apikey':CONFIG.supabaseKey,'Authorization':`Bearer ${CONFIG.supabaseKey}`,'Content-Type':'application/json'}});
+      if(!res.ok) throw new Error(res.status);
+      const rows=await res.json();
+      all=all.concat(rows);
+      if(rows.length<pageSize) break;
+      from+=pageSize;
+    }
+    allOrders=all.map((r,i)=>parseSupabaseRow(r,i));
     renderOrders();updateMetrics();updateRevenueStrip();updateLastSync();setSyncOk();
     showNoDbBanner(false);
     const sbMsg=document.getElementById('supabaseMsg');
