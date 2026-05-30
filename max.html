@@ -741,7 +741,7 @@ a{text-decoration:none;cursor:pointer}
     </div>
     <div>
       <label style="display:block;font-size:10px;letter-spacing:2px;color:var(--grey);text-transform:uppercase;margin-bottom:6px">Período</label>
-      <select id="prodPeriodo" class="config-input" style="width:auto;padding:6px 12px" onchange="document.getElementById('prodFecha').value='';renderProductos()">
+      <select id="prodPeriodo" class="config-input" style="width:auto;padding:6px 12px" onchange="document.getElementById('prodFecha').value='';document.getElementById('prodDesde').value='';document.getElementById('prodHasta').value='';renderProductos()">
         <option value="day">Hoy</option>
         <option value="yesterday">Ayer</option>
         <option value="week">Esta semana</option>
@@ -752,7 +752,18 @@ a{text-decoration:none;cursor:pointer}
     </div>
     <div>
       <label style="display:block;font-size:10px;letter-spacing:2px;color:var(--grey);text-transform:uppercase;margin-bottom:6px">Fecha exacta</label>
-      <input type="date" id="prodFecha" class="config-input" style="width:160px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="renderProductos()"/>
+      <input type="date" id="prodFecha" class="config-input" style="width:160px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="document.getElementById('prodDesde').value='';document.getElementById('prodHasta').value='';renderProductos()"/>
+    </div>
+    <div>
+      <label style="display:block;font-size:10px;letter-spacing:2px;color:var(--grey);text-transform:uppercase;margin-bottom:6px">Desde</label>
+      <input type="date" id="prodDesde" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="document.getElementById('prodFecha').value='';renderProductos()"/>
+    </div>
+    <div>
+      <label style="display:block;font-size:10px;letter-spacing:2px;color:var(--grey);text-transform:uppercase;margin-bottom:6px">Hasta</label>
+      <input type="date" id="prodHasta" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="document.getElementById('prodFecha').value='';renderProductos()"/>
+    </div>
+    <div style="padding-top:22px">
+      <button class="filter-tab" onclick="limpiarFiltroProductos()">✕</button>
     </div>
   </div>
 
@@ -2090,9 +2101,18 @@ function escHtml(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replac
   /* ── PRODUCTOS ── */
 function renderProductos(){
   const busq=(document.getElementById('prodSearch')?.value||'').toLowerCase().trim();
-  const fechaInp=document.getElementById('prodFecha')?.value;
+  const fechaInp=document.getElementById('prodFecha')?.value||'';
+  const desdeVal=document.getElementById('prodDesde')?.value||'';
+  const hastaVal=document.getElementById('prodHasta')?.value||'';
   const periodo=fechaInp?'custom_date:'+fechaInp:(document.getElementById('prodPeriodo')?.value||'month');
-  const orders=filterOrders(allOrders,periodo);
+  let orders;
+  if(desdeVal&&hastaVal){
+    const start=new Date(desdeVal+'T03:00:00');
+    const end=new Date(hastaVal+'T23:59:59');
+    orders=allOrders.filter(o=>o.dateObj>=start&&o.dateObj<=end);
+  } else {
+    orders=filterOrders(allOrders,periodo);
+  }
 
   // Frecuencia global del período
   const freq=getProductFreq(orders);
@@ -2142,9 +2162,18 @@ function renderProductos(){
 }
 
 function seleccionarProducto(nombre){
-  const fechaInp=document.getElementById('prodFecha')?.value;
+  const fechaInp=document.getElementById('prodFecha')?.value||'';
+  const desdeVal=document.getElementById('prodDesde')?.value||'';
+  const hastaVal=document.getElementById('prodHasta')?.value||'';
   const periodo=fechaInp?'custom_date:'+fechaInp:(document.getElementById('prodPeriodo')?.value||'month');
-  const orders=filterOrders(allOrders,periodo);
+  let orders;
+  if(desdeVal&&hastaVal){
+    const start=new Date(desdeVal+'T03:00:00');
+    const end=new Date(hastaVal+'T23:59:59');
+    orders=allOrders.filter(o=>o.dateObj>=start&&o.dateObj<=end);
+  } else {
+    orders=filterOrders(allOrders,periodo);
+  }
   const periodoLabels={day:'Hoy',yesterday:'Ayer',week:'Esta semana',month:'Este mes',year:'Este año',all:'Todo'};
   const pLabel=fechaInp?fechaInp:(periodoLabels[document.getElementById('prodPeriodo')?.value]||'');
 
@@ -2311,6 +2340,12 @@ function limpiarFiltroHoras(){
   document.getElementById('horasDesde').value='';
   document.getElementById('horasHasta').value='';
   renderHoras();
+}
+function limpiarFiltroProductos(){
+  document.getElementById('prodDesde').value='';
+  document.getElementById('prodHasta').value='';
+  document.getElementById('prodFecha').value='';
+  renderProductos();
 }
 function limpiarFiltroMetricas(){
   document.getElementById('metricasDesde').value='';
