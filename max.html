@@ -398,8 +398,15 @@ a{text-decoration:none;cursor:pointer}
           <button class="filter-tab" onclick="setFilter('year',this)">Año</button>
           <button class="filter-tab" onclick="setFilter('all',this)">Todo</button>
           <button class="filter-tab" id="filterTabFecha" onclick="toggleDatePicker(this)">📅 Fecha</button>
+          <button class="filter-tab" id="filterTabRango" onclick="toggleRangoPicker(this)">📅 Rango</button>
         </div>
-        <div id="datePickerWrap" style="display:none;margin-top:8px;display:none;align-items:center;gap:8px;flex-wrap:wrap">
+        <div id="rangoPickerWrap" style="display:none;margin-top:8px;align-items:center;gap:8px;flex-wrap:wrap">
+          <input type="date" id="rangoDesdeOrders" class="config-input" style="width:160px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="applyRangoOrders()"/>
+          <span style="color:#555">→</span>
+          <input type="date" id="rangoHastaOrders" class="config-input" style="width:160px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="applyRangoOrders()"/>
+          <button class="filter-tab" style="border-color:var(--gold3);color:var(--gold)" onclick="clearRangoOrders()">✕ Limpiar</button>
+        </div>
+        <div id="datePickerWrap" style="display:none;margin-top:8px;align-items:center;gap:8px;flex-wrap:wrap">
           <input type="date" id="customDateInput" class="config-input" style="width:160px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="applyCustomDate()"/>
           <button class="filter-tab" style="border-color:var(--gold3);color:var(--gold)" onclick="clearCustomDate()">✕ Limpiar</button>
         </div>
@@ -449,6 +456,8 @@ a{text-decoration:none;cursor:pointer}
             <option value="yesterday">Ayer</option>
             <option value="week">Esta semana</option><option value="year">Este año</option><option value="all">Todo</option>
           </select>
+          <input type="date" id="ventasDesde" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace" placeholder="Desde" onchange="renderVentas()" title="Desde"/>
+          <input type="date" id="ventasHasta" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace" placeholder="Hasta" onchange="renderVentas()" title="Hasta"/>
           <input type="date" id="ventasCustomDate" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace;display:none" onchange="renderVentas()" title="Filtrar ventas por fecha específica"/>
           <button class="filter-tab" id="ventasDateToggle" style="font-size:11px" onclick="toggleVentasDatePicker()">📅 Fecha</button>
           <button class="btn-export" onclick="exportVentasExcel()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Excel</button>
@@ -1057,6 +1066,37 @@ function applyCustomDate(){
   renderOrders();
 }
 
+function toggleRangoPicker(btn){
+  const wrap=document.getElementById('rangoPickerWrap');
+  const isOpen=wrap.style.display==='flex';
+  if(isOpen){clearRangoOrders();}
+  else{
+    wrap.style.display='flex';
+    document.querySelectorAll('#section-orders .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('datePickerWrap').style.display='none';
+  }
+}
+function applyRangoOrders(){
+  const desde=document.getElementById('rangoDesdeOrders').value;
+  const hasta=document.getElementById('rangoHastaOrders').value;
+  if(!desde||!hasta) return;
+  currentFilter='rango';
+  window._rangoDesde=desde;
+  window._rangoHasta=hasta;
+  renderOrders();
+}
+function clearRangoOrders(){
+  document.getElementById('rangoPickerWrap').style.display='none';
+  document.getElementById('rangoDesdeOrders').value='';
+  document.getElementById('rangoHastaOrders').value='';
+  window._rangoDesde=null;window._rangoHasta=null;
+  currentFilter='day';
+  document.querySelectorAll('#section-orders .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelector('#section-orders .filter-tab').classList.add('active');
+  renderOrders();
+}
+
 function clearCustomDate(){
   customDateFilter=null;
   document.getElementById('datePickerWrap').style.display='none';
@@ -1126,6 +1166,13 @@ function filterOrders(orders,period){
   const opDay=getOperationalDay(now);
   const todayStart=new Date(opDay.getFullYear(),opDay.getMonth(),opDay.getDate(),3,0,0);
 
+  if(p==='rango'){
+    if(!window._rangoDesde||!window._rangoHasta) return orders;
+    const start=new Date(window._rangoDesde+'T03:00:00');
+    const end=new Date(window._rangoHasta+'T23:59:59');
+    return orders.filter(o=>o.dateObj>=start&&o.dateObj<=end);
+  }
+
   // Custom single date (from date picker in Orders section)
   if(p==='custom'){
     if(!customDateFilter) return orders;
@@ -1172,13 +1219,30 @@ function updateRevenueStrip(){
 }
 
 /* ── RENDER ORDERS ── */
-function renderOrders(){
+let _ordersPage = 0;
+const _ordersPageSize = 25;
+
+function renderOrders(reset=true){
   updateRevenueStrip();
   const grid=document.getElementById('ordersGrid');
-  const filtered=filterOrders(allOrders);
+  const filtered=[...filterOrders(allOrders)].sort((a,b)=>b.dateObj-a.dateObj);
   document.getElementById('ordersCount').textContent=`${filtered.length} pedido${filtered.length!==1?'s':''}`;
   if(!filtered.length){grid.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><p>No hay pedidos en este período</p></div>';return;}
-  grid.innerHTML=[...filtered].sort((a,b)=>b.dateObj-a.dateObj).map(o=>createOrderCard(o)).join('');
+  if(reset) _ordersPage=0;
+  const slice=filtered.slice(0,(_ordersPage+1)*_ordersPageSize);
+  const hayMas=slice.length<filtered.length;
+  grid.innerHTML=slice.map(o=>createOrderCard(o)).join('');
+  const existing=document.getElementById('loadMoreBtn');
+  if(existing) existing.remove();
+  if(hayMas){
+    const btn=document.createElement('button');
+    btn.id='loadMoreBtn';
+    btn.className='btn-export';
+    btn.style.cssText='width:100%;margin-top:16px;padding:12px;justify-content:center;font-size:13px';
+    btn.textContent=`Cargar más (${filtered.length - slice.length} restantes)`;
+    btn.onclick=()=>{_ordersPage++;renderOrders(false);};
+    grid.parentElement.appendChild(btn);
+  }
 }
 function createOrderCard(order){
   const itemsHtml=order.items.length>0?order.items.map(i=>`<div class="order-item-line">• ${escHtml(i)}</div>`).join(''):`<div class="order-item-line">${escHtml(order.pedido||'—')}</div>`;
@@ -1252,8 +1316,18 @@ function renderVentas(){
   const customDateInp=document.getElementById('ventasCustomDate');
   const useCustomDate = customDateInp && customDateInp.style.display!=='none' && customDateInp.value;
   const filtroSel=document.getElementById('ventasMesFilter')?.value||'all';
-  const filtro = useCustomDate ? 'custom_date:'+customDateInp.value : filtroSel;
-  const base=filterOrders(allOrders, filtro==='all'?undefined:filtro);
+  const desdeVal = document.getElementById('ventasDesde')?.value;
+  const hastaVal = document.getElementById('ventasHasta')?.value;
+  const useRango = desdeVal && hastaVal;
+  let base;
+  if(useRango){
+    const desdeD = new Date(desdeVal+'T03:00:00');
+    const hastaD = new Date(hastaVal+'T23:59:59');
+    base = allOrders.filter(o=>o.dateObj>=desdeD && o.dateObj<=hastaD);
+  } else {
+    const filtro = useCustomDate ? 'custom_date:'+customDateInp.value : (filtroSel==='all'?'all':filtroSel);
+    base = filterOrders(allOrders, filtro==='all'?undefined:filtro);
+  }
 
   // Tarjeta 1: refleja el filtro activo con label dinámico
   const activoTotal=base.reduce((a,o)=>a+parseTotal(o.total),0);
@@ -1361,7 +1435,14 @@ function renderClientes(){
   filtrados.sort((a,b)=>b.pedidos.length-a.pedidos.length);
   const container=document.getElementById('clientesTable');
   if(!filtrados.length){container.innerHTML='<p style="color:#555;font-size:13px">Sin resultados</p>';return;}
-  container.innerHTML=filtrados.map(c=>{
+
+  const _clientesPage = parseInt(container.dataset.page||'0');
+  const _clientesSize = 20;
+  const pagFiltrados = filtrados.slice(0, (_clientesPage+1)*_clientesSize);
+  const hayMasCl = pagFiltrados.length < filtrados.length;
+
+  container.dataset.page = busq ? '0' : _clientesPage.toString();
+  container.innerHTML=pagFiltrados.map(c=>{
     const peds=c.pedidos.sort((a,b)=>a.dateObj-b.dateObj);
     const tG=c.pedidos.reduce((a,o)=>a+parseTotal(o.total),0);
     const tC=c.pedidos.length>0?tG/c.pedidos.length:0;
@@ -1369,6 +1450,22 @@ function renderClientes(){
     let frec='—';if(peds.length>=2){const d=(peds[peds.length-1].dateObj-peds[0].dateObj)/86400000;frec=Math.round(d/(peds.length-1))+'d';}
     return`<div class="cliente-row"><div class="cliente-header"><div><span class="cliente-nombre">${escHtml(c.nombre)}</span>${c.telefono?`<span class="cliente-tel">📞 ${escHtml(c.telefono)}</span>`:''}</div><div style="text-align:right"><div class="cliente-stat-val">${formatMoney(tG)}</div><div class="cliente-stat-lab">total gastado</div></div></div><div class="cliente-stats"><div class="cliente-stat"><span class="cliente-stat-val">${c.pedidos.length}</span><span class="cliente-stat-lab">pedidos</span></div><div class="cliente-stat"><span class="cliente-stat-val">${formatMoney(tC)}</span><span class="cliente-stat-lab">ticket prom.</span></div><div class="cliente-stat"><span class="cliente-stat-val">${frec}</span><span class="cliente-stat-lab">entre compras</span></div><div class="cliente-stat"><span class="cliente-stat-val">${peds.length>0?peds[peds.length-1].fecha:'—'}</span><span class="cliente-stat-lab">última compra</span></div></div>${top?`<div class="cliente-prods">🔁 Repite: ${escHtml(top)}</div>`:''}</div>`;
   }).join('');
+  
+  // Botón cargar más clientes
+  const btnCl = document.getElementById('loadMoreClientes');
+  if(btnCl) btnCl.remove();
+  if(hayMasCl){
+    const btn = document.createElement('button');
+    btn.id = 'loadMoreClientes';
+    btn.className = 'btn-export';
+    btn.style.cssText = 'width:100%;margin-top:16px;padding:12px;justify-content:center;font-size:13px';
+    btn.textContent = `Cargar más clientes (${filtrados.length - pagFiltrados.length} restantes)`;
+    btn.onclick = () => {
+      container.dataset.page = _clientesPage + 1;
+      renderClientes();
+    };
+    container.parentElement.appendChild(btn);
+  }
 }
 
 /* ── HORAS ── */
