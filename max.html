@@ -450,30 +450,28 @@ a{text-decoration:none;cursor:pointer}
     <section id="section-ventas" class="section">
       <div class="section-header">
         <h2>Ventas & Ingresos</h2>
-        <div class="section-header-actions" style="flex-direction:column;align-items:flex-end;gap:8px">
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-            <div class="filter-tabs" style="margin:0">
-              <button class="filter-tab active" id="vTab-month" onclick="setVentasPeriodo('month',this)">Mes</button>
-              <button class="filter-tab" id="vTab-day" onclick="setVentasPeriodo('day',this)">Hoy</button>
-              <button class="filter-tab" id="vTab-yesterday" onclick="setVentasPeriodo('yesterday',this)">Ayer</button>
-              <button class="filter-tab" id="vTab-week" onclick="setVentasPeriodo('week',this)">Semana</button>
-              <button class="filter-tab" id="vTab-year" onclick="setVentasPeriodo('year',this)">Año</button>
-              <button class="filter-tab" id="vTab-all" onclick="setVentasPeriodo('all',this)">Todo</button>
-              <button class="filter-tab" id="vTab-fecha" onclick="toggleVentasFecha()">📅 Fecha</button>
-              <button class="filter-tab" id="vTab-rango" onclick="toggleVentasRango()">📅 Rango</button>
-            </div>
-            <button class="btn-export" onclick="exportVentasExcel()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Excel</button>
-          </div>
-          <div id="ventasFechaWrap" style="display:none;align-items:center;gap:8px;flex-wrap:wrap">
-            <input type="date" id="ventasCustomDate" class="config-input" style="width:160px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="renderVentas()"/>
-            <button class="filter-tab" style="border-color:var(--gold3);color:var(--gold)" onclick="limpiarVentasFecha()">✕ Limpiar</button>
-          </div>
-          <div id="ventasRangoWrap" style="display:none;align-items:center;gap:8px;flex-wrap:wrap">
-            <input type="date" id="ventasDesde" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="renderVentas()"/>
-            <span style="color:#555">→</span>
-            <input type="date" id="ventasHasta" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="renderVentas()"/>
-            <button class="filter-tab" style="border-color:var(--gold3);color:var(--gold)" onclick="limpiarVentasRango()">✕ Limpiar</button>
-          </div>
+        <div class="section-header-actions">
+          <select id="ventasMesFilter" class="config-input" style="width:auto;padding:6px 12px" onchange="renderVentas()">
+            <option value="month" selected>Este mes</option>
+            <option value="day">Hoy</option>
+            <option value="yesterday">Ayer</option>
+            <option value="week">Esta semana</option>
+            <option value="year">Este año</option>
+            <option value="all">Todo</option>
+          </select>
+          <button class="filter-tab" id="vTab-fecha" onclick="toggleVentasFecha()">📅 Fecha</button>
+          <button class="filter-tab" id="vTab-rango" onclick="toggleVentasRango()">📅 Rango</button>
+          <button class="btn-export" onclick="exportVentasExcel()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Excel</button>
+        </div>
+        <div id="ventasFechaWrap" style="display:none;margin-top:8px;align-items:center;gap:8px;flex-wrap:wrap">
+          <input type="date" id="ventasCustomDate" class="config-input" style="width:160px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="renderVentas()"/>
+          <button class="filter-tab" style="border-color:var(--gold3);color:var(--gold)" onclick="limpiarVentasFecha()">✕ Limpiar</button>
+        </div>
+        <div id="ventasRangoWrap" style="display:none;margin-top:8px;align-items:center;gap:8px;flex-wrap:wrap">
+          <input type="date" id="ventasDesde" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="renderVentas()"/>
+          <span style="color:#555">→</span>
+          <input type="date" id="ventasHasta" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="renderVentas()"/>
+          <button class="filter-tab" style="border-color:var(--gold3);color:var(--gold)" onclick="limpiarVentasRango()">✕ Limpiar</button>
         </div>
       </div>
       <div class="metrics-grid" style="margin-bottom:20px">
@@ -1139,18 +1137,6 @@ function clearCustomDate(){
   renderOrders();
 }
 
-let ventasPeriodoActivo='month';
-function setVentasPeriodo(p,btn){
-  ventasPeriodoActivo=p;
-  document.querySelectorAll('#section-ventas .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('ventasFechaWrap').style.display='none';
-  document.getElementById('ventasRangoWrap').style.display='none';
-  document.getElementById('ventasCustomDate').value='';
-  document.getElementById('ventasDesde').value='';
-  document.getElementById('ventasHasta').value='';
-  renderVentas();
-}
 function toggleVentasFecha(){
   const wrap=document.getElementById('ventasFechaWrap');
   const isOpen=wrap.style.display==='flex';
@@ -1158,8 +1144,8 @@ function toggleVentasFecha(){
   else{
     wrap.style.display='flex';
     document.getElementById('ventasRangoWrap').style.display='none';
-    document.querySelectorAll('#section-ventas .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
     document.getElementById('vTab-fecha').classList.add('active');
+    document.getElementById('vTab-rango').classList.remove('active');
     const today=new Date();
     document.getElementById('ventasCustomDate').value=today.toISOString().split('T')[0];
     renderVentas();
@@ -1172,25 +1158,21 @@ function toggleVentasRango(){
   else{
     wrap.style.display='flex';
     document.getElementById('ventasFechaWrap').style.display='none';
-    document.querySelectorAll('#section-ventas .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
     document.getElementById('vTab-rango').classList.add('active');
+    document.getElementById('vTab-fecha').classList.remove('active');
   }
 }
 function limpiarVentasFecha(){
   document.getElementById('ventasFechaWrap').style.display='none';
   document.getElementById('ventasCustomDate').value='';
-  ventasPeriodoActivo='month';
-  document.querySelectorAll('#section-ventas .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
-  document.getElementById('vTab-month').classList.add('active');
+  document.getElementById('vTab-fecha').classList.remove('active');
   renderVentas();
 }
 function limpiarVentasRango(){
   document.getElementById('ventasRangoWrap').style.display='none';
   document.getElementById('ventasDesde').value='';
   document.getElementById('ventasHasta').value='';
-  ventasPeriodoActivo='month';
-  document.querySelectorAll('#section-ventas .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
-  document.getElementById('vTab-month').classList.add('active');
+  document.getElementById('vTab-rango').classList.remove('active');
   renderVentas();
 }
 function toggleVentasDatePicker(){}
@@ -1388,6 +1370,7 @@ function renderVentas(){
   const customDateVal=document.getElementById('ventasCustomDate')?.value;
   const desdeVal=document.getElementById('ventasDesde')?.value;
   const hastaVal=document.getElementById('ventasHasta')?.value;
+  const filtroSel=document.getElementById('ventasMesFilter')?.value||'month';
   let base;
   if(desdeVal&&hastaVal){
     const desdeD=new Date(desdeVal+'T03:00:00');
@@ -1396,13 +1379,13 @@ function renderVentas(){
   } else if(customDateVal){
     base=filterOrders(allOrders,'custom_date:'+customDateVal);
   } else {
-    base=filterOrders(allOrders,ventasPeriodoActivo==='all'?undefined:ventasPeriodoActivo);
+    base=filterOrders(allOrders,filtroSel==='all'?undefined:filtroSel);
   }
 
   // Tarjeta 1: refleja el filtro activo con label dinámico
   const activoTotal=base.reduce((a,o)=>a+parseTotal(o.total),0);
   const labelMap={day:'💵 Ventas Hoy',yesterday:'💵 Ventas Ayer',week:'📅 Esta Semana',month:'🗓️ Este Mes',year:'🏆 Este Año',all:'💵 Total General'};
-  const activoLabel=useCustomDate?'📅 '+customDateInp.value:(labelMap[filtroSel]||'💵 Ventas');
+  const activoLabel=customDateVal?'📅 '+customDateVal:desdeVal&&hastaVal?'📅 Rango':(labelMap[filtroSel]||'💵 Ventas');
   const lbl=document.getElementById('vActivoLabel');
   const val=document.getElementById('vActivo');
   if(lbl) lbl.textContent=activoLabel;
