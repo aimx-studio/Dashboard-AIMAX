@@ -621,23 +621,61 @@ function clearCustomDate(){
   renderOrders();
 }
 
-function toggleVentasDatePicker(){
-  const inp=document.getElementById('ventasCustomDate');
-  const sel=document.getElementById('ventasMesFilter');
-  const isOpen = inp.style.display!=='none';
-  if(isOpen){
-    inp.style.display='none';
-    sel.style.display='';
-    inp.value='';
-    renderVentas();
-  } else {
-    inp.style.display='';
-    sel.style.display='none';
+let ventasPeriodoActivo='month';
+function setVentasPeriodo(p,btn){
+  ventasPeriodoActivo=p;
+  document.querySelectorAll('#section-ventas .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('ventasFechaWrap').style.display='none';
+  document.getElementById('ventasRangoWrap').style.display='none';
+  document.getElementById('ventasCustomDate').value='';
+  document.getElementById('ventasDesde').value='';
+  document.getElementById('ventasHasta').value='';
+  renderVentas();
+}
+function toggleVentasFecha(){
+  const wrap=document.getElementById('ventasFechaWrap');
+  const isOpen=wrap.style.display==='flex';
+  if(isOpen){limpiarVentasFecha();}
+  else{
+    wrap.style.display='flex';
+    document.getElementById('ventasRangoWrap').style.display='none';
+    document.querySelectorAll('#section-ventas .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
+    document.getElementById('vTab-fecha').classList.add('active');
     const today=new Date();
-    inp.value=today.toISOString().split('T')[0];
+    document.getElementById('ventasCustomDate').value=today.toISOString().split('T')[0];
     renderVentas();
   }
 }
+function toggleVentasRango(){
+  const wrap=document.getElementById('ventasRangoWrap');
+  const isOpen=wrap.style.display==='flex';
+  if(isOpen){limpiarVentasRango();}
+  else{
+    wrap.style.display='flex';
+    document.getElementById('ventasFechaWrap').style.display='none';
+    document.querySelectorAll('#section-ventas .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
+    document.getElementById('vTab-rango').classList.add('active');
+  }
+}
+function limpiarVentasFecha(){
+  document.getElementById('ventasFechaWrap').style.display='none';
+  document.getElementById('ventasCustomDate').value='';
+  ventasPeriodoActivo='month';
+  document.querySelectorAll('#section-ventas .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('vTab-month').classList.add('active');
+  renderVentas();
+}
+function limpiarVentasRango(){
+  document.getElementById('ventasRangoWrap').style.display='none';
+  document.getElementById('ventasDesde').value='';
+  document.getElementById('ventasHasta').value='';
+  ventasPeriodoActivo='month';
+  document.querySelectorAll('#section-ventas .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('vTab-month').classList.add('active');
+  renderVentas();
+}
+function toggleVentasDatePicker(){}
 
 function getOperationalDay(date){
   const d=date||new Date();
@@ -768,20 +806,18 @@ function updateMetrics(){
 /* VENTAS */
 function renderVentas(){
   if(!allOrders.length) return;
-  const customDateInp=document.getElementById('ventasCustomDate');
-  const useCustomDate = customDateInp && customDateInp.style.display!=='none' && customDateInp.value;
-  const filtroSel=document.getElementById('ventasMesFilter')?.value||'all';
-  const desdeVal = document.getElementById('ventasDesde')?.value;
-  const hastaVal = document.getElementById('ventasHasta')?.value;
-  const useRango = desdeVal && hastaVal;
+  const customDateVal=document.getElementById('ventasCustomDate')?.value;
+  const desdeVal=document.getElementById('ventasDesde')?.value;
+  const hastaVal=document.getElementById('ventasHasta')?.value;
   let base;
-  if(useRango){
-    const desdeD = new Date(desdeVal+'T03:00:00');
-    const hastaD = new Date(hastaVal+'T23:59:59');
-    base = allOrders.filter(o=>o.dateObj>=desdeD && o.dateObj<=hastaD);
+  if(desdeVal&&hastaVal){
+    const desdeD=new Date(desdeVal+'T03:00:00');
+    const hastaD=new Date(hastaVal+'T23:59:59');
+    base=allOrders.filter(o=>o.dateObj>=desdeD&&o.dateObj<=hastaD);
+  } else if(customDateVal){
+    base=filterOrders(allOrders,'custom_date:'+customDateVal);
   } else {
-    const filtro = useCustomDate ? 'custom_date:'+customDateInp.value : (filtroSel==='all'?'all':filtroSel);
-    base = filterOrders(allOrders, filtro==='all'?undefined:filtro);
+    base=filterOrders(allOrders,ventasPeriodoActivo==='all'?undefined:ventasPeriodoActivo);
   }
 
   // Tarjeta 1: refleja el filtro activo con label dinámico

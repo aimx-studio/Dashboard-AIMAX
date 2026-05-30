@@ -450,17 +450,30 @@ a{text-decoration:none;cursor:pointer}
     <section id="section-ventas" class="section">
       <div class="section-header">
         <h2>Ventas & Ingresos</h2>
-        <div class="section-header-actions">
-          <select id="ventasMesFilter" class="config-input" style="width:auto;padding:6px 12px" onchange="renderVentas()">
-            <option value="month" selected>Este mes</option><option value="day">Hoy</option>
-            <option value="yesterday">Ayer</option>
-            <option value="week">Esta semana</option><option value="year">Este año</option><option value="all">Todo</option>
-          </select>
-          <input type="date" id="ventasDesde" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace" placeholder="Desde" onchange="renderVentas()" title="Desde"/>
-          <input type="date" id="ventasHasta" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace" placeholder="Hasta" onchange="renderVentas()" title="Hasta"/>
-          <input type="date" id="ventasCustomDate" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace;display:none" onchange="renderVentas()" title="Filtrar ventas por fecha específica"/>
-          <button class="filter-tab" id="ventasDateToggle" style="font-size:11px" onclick="toggleVentasDatePicker()">📅 Fecha</button>
-          <button class="btn-export" onclick="exportVentasExcel()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Excel</button>
+        <div class="section-header-actions" style="flex-direction:column;align-items:flex-end;gap:8px">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            <div class="filter-tabs" style="margin:0">
+              <button class="filter-tab active" id="vTab-month" onclick="setVentasPeriodo('month',this)">Mes</button>
+              <button class="filter-tab" id="vTab-day" onclick="setVentasPeriodo('day',this)">Hoy</button>
+              <button class="filter-tab" id="vTab-yesterday" onclick="setVentasPeriodo('yesterday',this)">Ayer</button>
+              <button class="filter-tab" id="vTab-week" onclick="setVentasPeriodo('week',this)">Semana</button>
+              <button class="filter-tab" id="vTab-year" onclick="setVentasPeriodo('year',this)">Año</button>
+              <button class="filter-tab" id="vTab-all" onclick="setVentasPeriodo('all',this)">Todo</button>
+              <button class="filter-tab" id="vTab-fecha" onclick="toggleVentasFecha()">📅 Fecha</button>
+              <button class="filter-tab" id="vTab-rango" onclick="toggleVentasRango()">📅 Rango</button>
+            </div>
+            <button class="btn-export" onclick="exportVentasExcel()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Excel</button>
+          </div>
+          <div id="ventasFechaWrap" style="display:none;align-items:center;gap:8px;flex-wrap:wrap">
+            <input type="date" id="ventasCustomDate" class="config-input" style="width:160px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="renderVentas()"/>
+            <button class="filter-tab" style="border-color:var(--gold3);color:var(--gold)" onclick="limpiarVentasFecha()">✕ Limpiar</button>
+          </div>
+          <div id="ventasRangoWrap" style="display:none;align-items:center;gap:8px;flex-wrap:wrap">
+            <input type="date" id="ventasDesde" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="renderVentas()"/>
+            <span style="color:#555">→</span>
+            <input type="date" id="ventasHasta" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="renderVentas()"/>
+            <button class="filter-tab" style="border-color:var(--gold3);color:var(--gold)" onclick="limpiarVentasRango()">✕ Limpiar</button>
+          </div>
         </div>
       </div>
       <div class="metrics-grid" style="margin-bottom:20px">
@@ -504,7 +517,12 @@ a{text-decoration:none;cursor:pointer}
     <section id="section-clientes" class="section">
       <div class="section-header">
         <h2>Análisis de Clientes</h2>
-        <input type="text" id="clienteSearch" class="config-input" style="width:220px;padding:6px 12px" placeholder="🔍 Buscar cliente..." oninput="renderClientes()">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input type="text" id="clienteSearch" class="config-input" style="width:220px;padding:6px 12px" placeholder="🔍 Buscar cliente..." oninput="renderClientes()">
+          <input type="date" id="clientesDesde" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace" title="Desde" onchange="renderClientes()"/>
+          <input type="date" id="clientesHasta" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace" title="Hasta" onchange="renderClientes()"/>
+          <button class="filter-tab" onclick="limpiarFiltroClientes()">✕</button>
+        </div>
       </div>
       <div class="metrics-grid" style="margin-bottom:20px">
         <div class="metrics-big-card"><span class="mbcard-label">👥 Clientes Únicos</span><span class="mbcard-number" id="cUnicos">0</span></div>
@@ -517,7 +535,14 @@ a{text-decoration:none;cursor:pointer}
 
     <!-- ── HORAS ── -->
     <section id="section-horas" class="section">
-      <div class="section-header"><h2>Análisis por Horas</h2></div>
+      <div class="section-header">
+        <h2>Análisis por Horas</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input type="date" id="horasDesde" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace" title="Desde" onchange="renderHoras()"/>
+          <input type="date" id="horasHasta" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace" title="Hasta" onchange="renderHoras()"/>
+          <button class="filter-tab" onclick="limpiarFiltroHoras()">✕</button>
+        </div>
+      </div>
       <div class="top-products-card" style="margin-bottom:20px">
         <h3 class="tpc-title" style="margin-bottom:14px">⏱️ Ventas en Rango de Hora</h3>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
@@ -547,7 +572,14 @@ a{text-decoration:none;cursor:pointer}
 
     <!-- ── METRICS ── -->
     <section id="section-metrics" class="section">
-      <div class="section-header"><h2>Métricas de Pedidos</h2></div>
+      <div class="section-header">
+        <h2>Métricas de Pedidos</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input type="date" id="metricasDesde" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace" title="Desde" onchange="updateMetrics()"/>
+          <input type="date" id="metricasHasta" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace" title="Hasta" onchange="updateMetrics()"/>
+          <button class="filter-tab" onclick="limpiarFiltroMetricas()">✕</button>
+        </div>
+      </div>
       <div class="metrics-grid">
         <div class="metrics-big-card"><span class="mbcard-label">Pedidos Hoy</span><span class="mbcard-number" id="m2Today">0</span></div>
         <div class="metrics-big-card"><span class="mbcard-label">Pedidos Esta Semana</span><span class="mbcard-number" id="m2Week">0</span></div>
@@ -1107,23 +1139,61 @@ function clearCustomDate(){
   renderOrders();
 }
 
-function toggleVentasDatePicker(){
-  const inp=document.getElementById('ventasCustomDate');
-  const sel=document.getElementById('ventasMesFilter');
-  const isOpen = inp.style.display!=='none';
-  if(isOpen){
-    inp.style.display='none';
-    sel.style.display='';
-    inp.value='';
-    renderVentas();
-  } else {
-    inp.style.display='';
-    sel.style.display='none';
+let ventasPeriodoActivo='month';
+function setVentasPeriodo(p,btn){
+  ventasPeriodoActivo=p;
+  document.querySelectorAll('#section-ventas .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('ventasFechaWrap').style.display='none';
+  document.getElementById('ventasRangoWrap').style.display='none';
+  document.getElementById('ventasCustomDate').value='';
+  document.getElementById('ventasDesde').value='';
+  document.getElementById('ventasHasta').value='';
+  renderVentas();
+}
+function toggleVentasFecha(){
+  const wrap=document.getElementById('ventasFechaWrap');
+  const isOpen=wrap.style.display==='flex';
+  if(isOpen){limpiarVentasFecha();}
+  else{
+    wrap.style.display='flex';
+    document.getElementById('ventasRangoWrap').style.display='none';
+    document.querySelectorAll('#section-ventas .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
+    document.getElementById('vTab-fecha').classList.add('active');
     const today=new Date();
-    inp.value=today.toISOString().split('T')[0];
+    document.getElementById('ventasCustomDate').value=today.toISOString().split('T')[0];
     renderVentas();
   }
 }
+function toggleVentasRango(){
+  const wrap=document.getElementById('ventasRangoWrap');
+  const isOpen=wrap.style.display==='flex';
+  if(isOpen){limpiarVentasRango();}
+  else{
+    wrap.style.display='flex';
+    document.getElementById('ventasFechaWrap').style.display='none';
+    document.querySelectorAll('#section-ventas .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
+    document.getElementById('vTab-rango').classList.add('active');
+  }
+}
+function limpiarVentasFecha(){
+  document.getElementById('ventasFechaWrap').style.display='none';
+  document.getElementById('ventasCustomDate').value='';
+  ventasPeriodoActivo='month';
+  document.querySelectorAll('#section-ventas .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('vTab-month').classList.add('active');
+  renderVentas();
+}
+function limpiarVentasRango(){
+  document.getElementById('ventasRangoWrap').style.display='none';
+  document.getElementById('ventasDesde').value='';
+  document.getElementById('ventasHasta').value='';
+  ventasPeriodoActivo='month';
+  document.querySelectorAll('#section-ventas .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('vTab-month').classList.add('active');
+  renderVentas();
+}
+function toggleVentasDatePicker(){}
 
 function toggleCierreDatePicker(btn){
   const wrap=document.getElementById('cierreDatePickerWrap');
@@ -1277,10 +1347,12 @@ function getTopProduct(orders){
   return s.length?s[0][0]:null;
 }
 function updateMetrics(){
-  const tO=filterOrders(allOrders,'day');
-  const mO=filterOrders(allOrders,'month');
-  const wO=filterOrders(allOrders,'week');
-  const yO=filterOrders(allOrders,'year');
+  const rangoBase=getOrdersConRango('metricasDesde','metricasHasta',null);
+  const usaRango=document.getElementById('metricasDesde')?.value&&document.getElementById('metricasHasta')?.value;
+  const tO=usaRango?rangoBase:filterOrders(allOrders,'day');
+  const mO=usaRango?rangoBase:filterOrders(allOrders,'month');
+  const wO=usaRango?rangoBase:filterOrders(allOrders,'week');
+  const yO=usaRango?rangoBase:filterOrders(allOrders,'year');
   document.getElementById('metricToday').textContent=tO.length;
   document.getElementById('metricMonth').textContent=mO.length;
   document.getElementById('metricTop').textContent=getTopProduct(allOrders)||'—';
@@ -1313,20 +1385,18 @@ function renderBottomProducts(orders){
 /* ── VENTAS ── */
 function renderVentas(){
   if(!allOrders.length) return;
-  const customDateInp=document.getElementById('ventasCustomDate');
-  const useCustomDate = customDateInp && customDateInp.style.display!=='none' && customDateInp.value;
-  const filtroSel=document.getElementById('ventasMesFilter')?.value||'all';
-  const desdeVal = document.getElementById('ventasDesde')?.value;
-  const hastaVal = document.getElementById('ventasHasta')?.value;
-  const useRango = desdeVal && hastaVal;
+  const customDateVal=document.getElementById('ventasCustomDate')?.value;
+  const desdeVal=document.getElementById('ventasDesde')?.value;
+  const hastaVal=document.getElementById('ventasHasta')?.value;
   let base;
-  if(useRango){
-    const desdeD = new Date(desdeVal+'T03:00:00');
-    const hastaD = new Date(hastaVal+'T23:59:59');
-    base = allOrders.filter(o=>o.dateObj>=desdeD && o.dateObj<=hastaD);
+  if(desdeVal&&hastaVal){
+    const desdeD=new Date(desdeVal+'T03:00:00');
+    const hastaD=new Date(hastaVal+'T23:59:59');
+    base=allOrders.filter(o=>o.dateObj>=desdeD&&o.dateObj<=hastaD);
+  } else if(customDateVal){
+    base=filterOrders(allOrders,'custom_date:'+customDateVal);
   } else {
-    const filtro = useCustomDate ? 'custom_date:'+customDateInp.value : (filtroSel==='all'?'all':filtroSel);
-    base = filterOrders(allOrders, filtro==='all'?undefined:filtro);
+    base=filterOrders(allOrders,ventasPeriodoActivo==='all'?undefined:ventasPeriodoActivo);
   }
 
   // Tarjeta 1: refleja el filtro activo con label dinámico
@@ -1412,8 +1482,9 @@ function exportVentasExcel(){
 function renderClientes(){
   if(!allOrders.length) return;
   const busq=(document.getElementById('clienteSearch')?.value||'').toLowerCase().trim();
+  const baseOrders=getOrdersConRango('clientesDesde','clientesHasta','all');
   const clientes={};
-  allOrders.forEach(o=>{
+  baseOrders.forEach(o=>{
     const k=o.cliente.trim().toLowerCase();
     if(!clientes[k]) clientes[k]={nombre:o.cliente,pedidos:[],telefono:o.telefono,productos:{}};
     clientes[k].pedidos.push(o);
@@ -1425,8 +1496,8 @@ function renderClientes(){
   const lista=Object.values(clientes);
   document.getElementById('cUnicos').textContent=lista.length;
   document.getElementById('cFrecuentes').textContent=lista.filter(c=>c.pedidos.length>=2).length;
-  const totD=allOrders.reduce((a,o)=>a+parseTotal(o.total),0);
-  document.getElementById('cTicketProm').textContent=formatMoney(allOrders.length>0?totD/allOrders.length:0);
+  const totD=baseOrders.reduce((a,o)=>a+parseTotal(o.total),0);
+  document.getElementById('cTicketProm').textContent=formatMoney(baseOrders.length>0?totD/baseOrders.length:0);
   let fS=0,fC=0;
   lista.forEach(c=>{if(c.pedidos.length>=2){const s=c.pedidos.map(p=>p.dateObj.getTime()).sort((a,b)=>a-b);const d=(s[s.length-1]-s[0])/(86400000);const f=d/(c.pedidos.length-1);if(f>0){fS+=f;fC++;}}});
   document.getElementById('cFrecProm').textContent=fC>0?Math.round(fS/fC)+'d':'—';
@@ -1472,7 +1543,7 @@ function renderClientes(){
 function setHorasPeriodo(p,btn){horasPeriodo=p;document.querySelectorAll('#section-horas .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderHoras();}
 function renderHoras(){renderPedidosPorHora();renderHorasDia();renderRangoHorario();}
 function renderPedidosPorHora(){
-  const orders=filterOrders(allOrders,horasPeriodo);
+  const orders=getOrdersConRango('horasDesde','horasHasta',horasPeriodo);
   const byHour=Array(24).fill(0);
   orders.forEach(o=>{
   const d=new Date((o.fecha+' '+o.hora).replace(/(\d{1,2})\/(\d{1,2})\/(\d{4})/,'$3-$2-$1'));
@@ -1496,7 +1567,7 @@ function renderRangoHorario(){
   const hasta=document.getElementById('rangoHasta')?.value||'23:59';
   const periodo=document.getElementById('rangoPeriodo')?.value||'all';
   const[hD,mD]=desde.split(':').map(Number);const[hH,mH]=hasta.split(':').map(Number);
-  const orders=filterOrders(allOrders,periodo).filter(o=>{const mins=o.dateObj.getHours()*60+o.dateObj.getMinutes();return mins>=hD*60+mD&&mins<=hH*60+mH;});
+  const orders=getOrdersConRango('horasDesde','horasHasta',periodo).filter(o=>{const mins=o.dateObj.getHours()*60+o.dateObj.getMinutes();return mins>=hD*60+mD&&mins<=hH*60+mH;});
   const t=orders.reduce((a,o)=>a+parseTotal(o.total),0);
   const elP=document.getElementById('rangoPedidos'),elV=document.getElementById('rangoVentas');
   if(elP) elP.textContent=orders.length;if(elV) elV.textContent=formatMoney(t);
@@ -2228,6 +2299,34 @@ async function guardarCatalogoEnSupabase(platos) {
       }
     );
   } catch(e) { console.warn('Error guardando catálogo en Supabase', e); }
+}
+
+/* ── HELPER: rango de fechas genérico ── */
+function getOrdersConRango(desdeId, hastaId, fallbackPeriodo) {
+  const desdeVal=document.getElementById(desdeId)?.value;
+  const hastaVal=document.getElementById(hastaId)?.value;
+  if(desdeVal&&hastaVal){
+    const start=new Date(desdeVal+'T03:00:00');
+    const end=new Date(hastaVal+'T23:59:59');
+    return allOrders.filter(o=>o.dateObj>=start&&o.dateObj<=end);
+  }
+  if(!fallbackPeriodo) return allOrders;
+  return filterOrders(allOrders,fallbackPeriodo);
+}
+function limpiarFiltroClientes(){
+  document.getElementById('clientesDesde').value='';
+  document.getElementById('clientesHasta').value='';
+  renderClientes();
+}
+function limpiarFiltroHoras(){
+  document.getElementById('horasDesde').value='';
+  document.getElementById('horasHasta').value='';
+  renderHoras();
+}
+function limpiarFiltroMetricas(){
+  document.getElementById('metricasDesde').value='';
+  document.getElementById('metricasHasta').value='';
+  updateMetrics();
 }
 
 // ── AUTO-START ──
