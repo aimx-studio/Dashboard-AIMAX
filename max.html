@@ -612,9 +612,16 @@ a{text-decoration:none;cursor:pointer}
             <button class="filter-tab active" id="cierreTabHoy" onclick="setCierrePeriodo('day',this)">Hoy</button>
             <button class="filter-tab" id="cierreTabAyer" onclick="setCierrePeriodo('yesterday',this)">Ayer</button>
             <button class="filter-tab" id="cierreTabFecha" onclick="toggleCierreDatePicker(this)">📅 Fecha</button>
+            <button class="filter-tab" id="cierreTabRango" onclick="toggleCierreRango(this)">📅 Rango</button>
           </div>
           <div id="cierreDatePickerWrap" style="display:none;margin-top:6px">
             <input type="date" id="cierreCustomDate" class="config-input" style="width:160px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="applyCierreCustomDate()"/>
+          </div>
+          <div id="cierreRangoWrap" style="display:none;margin-top:6px;display:none;align-items:center;gap:8px;flex-wrap:wrap">
+            <input type="date" id="cierreDesde" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace"/>
+            <span style="color:#555">→</span>
+            <input type="date" id="cierreHasta" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace"/>
+            <button class="filter-tab" style="border-color:var(--gold3);color:var(--gold)" onclick="limpiarCierreRango()">✕ Limpiar</button>
           </div>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
@@ -754,17 +761,19 @@ a{text-decoration:none;cursor:pointer}
       <label style="display:block;font-size:10px;letter-spacing:2px;color:var(--grey);text-transform:uppercase;margin-bottom:6px">Fecha exacta</label>
       <input type="date" id="prodFecha" class="config-input" style="width:160px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="document.getElementById('prodDesde').value='';document.getElementById('prodHasta').value='';renderProductos()"/>
     </div>
-    <div>
-      <label style="display:block;font-size:10px;letter-spacing:2px;color:var(--grey);text-transform:uppercase;margin-bottom:6px">Desde</label>
-      <input type="date" id="prodDesde" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="document.getElementById('prodFecha').value='';renderProductos()"/>
-    </div>
-    <div>
-      <label style="display:block;font-size:10px;letter-spacing:2px;color:var(--grey);text-transform:uppercase;margin-bottom:6px">Hasta</label>
-      <input type="date" id="prodHasta" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="document.getElementById('prodFecha').value='';renderProductos()"/>
+    <div style="padding-top:22px">
+      <button class="filter-tab" id="prodTabRango" onclick="toggleProdRango(this)">📅 Rango</button>
     </div>
     <div style="padding-top:22px">
       <button class="filter-tab" onclick="limpiarFiltroProductos()">✕</button>
     </div>
+  </div>
+  <!-- Rango picker oculto -->
+  <div id="prodRangoWrap" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+    <input type="date" id="prodDesde" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="document.getElementById('prodFecha').value='';renderProductos()"/>
+    <span style="color:#555">→</span>
+    <input type="date" id="prodHasta" class="config-input" style="width:150px;padding:6px 12px;font-family:'JetBrains Mono',monospace" onchange="document.getElementById('prodFecha').value='';renderProductos()"/>
+    <button class="filter-tab" style="border-color:var(--gold3);color:var(--gold)" onclick="limpiarProdRango()">✕ Limpiar</button>
   </div>
 
   <!-- Stats del producto seleccionado -->
@@ -1229,6 +1238,17 @@ function filterOrders(orders,period){
   const opDay=getOperationalDay(now);
   const todayStart=new Date(opDay.getFullYear(),opDay.getMonth(),opDay.getDate(),3,0,0);
 
+  if(p==='rango_cierre'){
+    const desdeV=document.getElementById('cierreDesde')?.value;
+    const hastaV=document.getElementById('cierreHasta')?.value;
+    if(!desdeV||!hastaV) return orders;
+    const start=new Date(desdeV+'T03:00:00');
+    const end=new Date(hastaV+'T23:59:59');
+    const el=document.getElementById('cierreFechaHoy');
+    if(el) el.textContent=desdeV+' → '+hastaV;
+    return orders.filter(o=>o.dateObj>=start&&o.dateObj<=end);
+  }
+
   if(p==='rango'){
     if(!window._rangoDesde||!window._rangoHasta) return orders;
     const start=new Date(window._rangoDesde+'T03:00:00');
@@ -1255,6 +1275,7 @@ function filterOrders(orders,period){
   }
 
   switch(p){
+    
     case 'day':
       return orders.filter(o=>o.dateObj>=todayStart);
     case 'yesterday': {
@@ -2351,6 +2372,49 @@ function limpiarFiltroMetricas(){
   document.getElementById('metricasDesde').value='';
   document.getElementById('metricasHasta').value='';
   updateMetrics();
+}
+
+/* ── RANGO PRODUCTOS ── */
+function toggleProdRango(btn){
+  const wrap=document.getElementById('prodRangoWrap');
+  const isOpen=wrap.style.display==='flex';
+  if(isOpen){ limpiarProdRango(); }
+  else{
+    wrap.style.display='flex';
+    document.getElementById('prodTabRango').classList.add('active');
+    document.getElementById('prodFecha').value='';
+    renderProductos();
+  }
+}
+function limpiarProdRango(){
+  document.getElementById('prodRangoWrap').style.display='none';
+  document.getElementById('prodDesde').value='';
+  document.getElementById('prodHasta').value='';
+  document.getElementById('prodTabRango').classList.remove('active');
+  renderProductos();
+}
+
+/* ── RANGO CIERRE DE CAJA ── */
+function toggleCierreRango(btn){
+  const wrap=document.getElementById('cierreRangoWrap');
+  const isOpen=wrap.style.display==='flex';
+  if(isOpen){ limpiarCierreRango(); }
+  else{
+    wrap.style.display='flex';
+    document.getElementById('cierreDatePickerWrap').style.display='none';
+    document.querySelectorAll('#section-cierre .filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    cierrePeriodo='rango_cierre';
+  }
+}
+function limpiarCierreRango(){
+  document.getElementById('cierreRangoWrap').style.display='none';
+  document.getElementById('cierreDesde').value='';
+  document.getElementById('cierreHasta').value='';
+  document.getElementById('cierreTabRango').classList.remove('active');
+  document.getElementById('cierreTabHoy').classList.add('active');
+  cierrePeriodo='day';
+  actualizarFechaCierre();
 }
 
 // ── AUTO-START ──

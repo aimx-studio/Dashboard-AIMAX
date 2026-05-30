@@ -673,6 +673,17 @@ function filterOrders(orders,period){
   const opDay=getOperationalDay(now);
   const todayStart=new Date(opDay.getFullYear(),opDay.getMonth(),opDay.getDate(),3,0,0);
 
+  if(p==='rango_cierre'){
+    const desdeV=document.getElementById('cierreDesde')?.value;
+    const hastaV=document.getElementById('cierreHasta')?.value;
+    if(!desdeV||!hastaV) return orders;
+    const start=new Date(desdeV+'T03:00:00');
+    const end=new Date(hastaV+'T23:59:59');
+    const el=document.getElementById('cierreFechaHoy');
+    if(el) el.textContent=desdeV+' → '+hastaV;
+    return orders.filter(o=>o.dateObj>=start&&o.dateObj<=end);
+  }
+
   if(p==='rango'){
     if(!window._rangoDesde||!window._rangoHasta) return orders;
     const start=new Date(window._rangoDesde+'T03:00:00');
