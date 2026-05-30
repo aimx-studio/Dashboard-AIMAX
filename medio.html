@@ -708,6 +708,8 @@ function filterOrders(orders,period){
       return orders.filter(o=>o.dateObj>=new Date(opDay.getFullYear(),opDay.getMonth(),1,3,0,0));
     case 'year':
       return orders.filter(o=>o.dateObj>=new Date(opDay.getFullYear(),0,1,3,0,0));
+    case 'all':
+      return orders;
     default:
       return orders;
   }
@@ -732,6 +734,8 @@ function renderOrders(reset=true){
   const grid=document.getElementById('ordersGrid');
   const filtered=[...filterOrders(allOrders)].sort((a,b)=>b.dateObj-a.dateObj);
   document.getElementById('ordersCount').textContent=`${filtered.length} pedido${filtered.length!==1?'s':''}`;
+  const existing2=document.getElementById('loadMoreBtn');
+  if(existing2) existing2.remove();
   if(!filtered.length){grid.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><p>No hay pedidos en este período</p></div>';return;}
   if(reset) _ordersPage=0;
   const slice=filtered.slice(0,(_ordersPage+1)*_ordersPageSize);
@@ -790,9 +794,9 @@ function updateMetrics(){
 /* VENTAS */
 function renderVentas(){
   if(!allOrders.length) return;
-  const customDateVal=document.getElementById('ventasCustomDate')?.value;
-  const desdeVal=document.getElementById('ventasDesde')?.value;
-  const hastaVal=document.getElementById('ventasHasta')?.value;
+  const customDateVal=document.getElementById('ventasCustomDate')?.value||'';
+  const desdeVal=document.getElementById('ventasDesde')?.value||'';
+  const hastaVal=document.getElementById('ventasHasta')?.value||'';
   const filtroSel=document.getElementById('ventasMesFilter')?.value||'month';
   let base;
   if(desdeVal&&hastaVal){
@@ -801,8 +805,10 @@ function renderVentas(){
     base=allOrders.filter(o=>o.dateObj>=desdeD&&o.dateObj<=hastaD);
   } else if(customDateVal){
     base=filterOrders(allOrders,'custom_date:'+customDateVal);
+  } else if(filtroSel==='all'){
+    base=allOrders;
   } else {
-    base=filterOrders(allOrders,filtroSel==='all'?undefined:filtroSel);
+    base=filterOrders(allOrders,filtroSel);
   }
 
   // Tarjeta 1: refleja el filtro activo con label dinámico
