@@ -1018,7 +1018,7 @@ function parseSupabaseRow(row,idx){
   const fecha=fechaRaw.replace(/\s+\d{1,2}:\d{2}(:\d{2})?/,'').trim();
   const createdAt=row.created_at||'';
 const dateObj=createdAt?toColombiaDate(createdAt):parseDate(fechaRaw,hora);
-  return{id:`order-${row.id||idx+1}`,index:idx+1,fecha,hora,cliente,telefono,pedido,entrega,direccion,pago,total,extras,efectivo,dateObj,items:parseItems(pedido)};
+  return{id:`order-${row.id||idx+1}`,supabaseId:row.id,index:idx+1,fecha,hora,cliente,telefono,pedido,entrega,direccion,pago,total,extras,efectivo,dateObj,items:parseItems(pedido)};
 }
 function toColombiaDate(utcString) {
   // Colombia es UTC-5, sin horario de verano
@@ -1337,7 +1337,7 @@ function createOrderCard(order){
   const badge=order.entrega?`<span class="entrega-badge ${order.entrega.toLowerCase().includes('dom')?'badge-dom':'badge-local'}">${escHtml(order.entrega)}</span>`:'';
   const pd=encodeURIComponent(JSON.stringify({id:order.id,index:order.index,cliente:order.cliente,telefono:order.telefono,fecha:order.fecha,hora:order.hora,pedido:order.pedido,items:order.items,entrega:order.entrega,direccion:order.direccion,pago:order.pago,extras:order.extras,total:order.total,efectivo:order.efectivo}));
   return`<div class="order-card" id="${order.id}">
-    <div class="order-card-header"><div><div class="order-number">#${String(order.index).padStart(3,'0')} ${badge}</div><div class="order-client">${escHtml(order.cliente)}</div>${order.telefono?`<div class="order-meta">📞 ${escHtml(order.telefono)}</div>`:''}</div><button onclick="deleteOrder('${order.id}','${order.index}')" title="Eliminar" style="background:none;border:1px solid #2a1a1a;color:#555;cursor:pointer;border-radius:4px;padding:2px 7px;font-size:11px;display:block;margin-bottom:4px" onmouseover="this.style.color='#e05252';this.style.borderColor='#e05252'" onmouseout="this.style.color='#555';this.style.borderColor='#2a1a1a'">✕</button><div class="order-time">${escHtml(order.hora)}</div></div>
+    <div class="order-card-header"><div><div class="order-number">#${String(order.index).padStart(3,'0')} ${badge}</div><div class="order-client">${escHtml(order.cliente)}</div>${order.telefono?`<div class="order-meta">📞 ${escHtml(order.telefono)}</div>`:''}</div><button onclick="deleteOrder('${order.id}','${escHtml(String(order.supabaseId||order.index))}')" title="Eliminar" style="background:none;border:1px solid #2a1a1a;color:#555;cursor:pointer;border-radius:4px;padding:2px 7px;font-size:11px;display:block;margin-bottom:4px" onmouseover="this.style.color='#e05252';this.style.borderColor='#e05252'" onmouseout="this.style.color='#555';this.style.borderColor='#2a1a1a'">✕</button><div class="order-time">${escHtml(order.hora)}</div></div>
     <div class="order-divider"></div>
     <div class="order-items">${itemsHtml}</div>
     ${order.direccion?`<div class="order-meta-row"><span class="order-meta-label">📍 Dirección</span><span class="order-meta-val">${escHtml(order.direccion)}</span></div>`:''}
