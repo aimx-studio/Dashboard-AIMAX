@@ -512,9 +512,43 @@ function parseDate(fecha,hora){
   }
   return new Date(0);
 }
-function parseItems(p){
+function parseItemsDetalle(p){
   if(!p) return [];
-  return p.split(/[,\n]/).map(s=>s.trim().replace(/^[•\-\*]+\s*/,'')).filter(Boolean);
+  const texto=String(p).replace(/\r/g,'');
+  if(!texto.includes('•')){
+    return texto.split(/[,\n]/).map(s=>s.trim()).filter(Boolean).map(l=>({linea:l,subs:[]}));
+  }
+  const lineas=texto.replace(/\s*\|\s*(?=•)/g,'\n').split('\n').map(s=>s.trim()).filter(Boolean);
+  const out=[];
+  lineas.forEach(l=>{
+    if(l.startsWith('•')||!out.length) out.push({linea:l.replace(/^[•\-\*]+\s*/,''),subs:[]});
+    else out[out.length-1].subs.push(l);
+  });
+  out.forEach(it=>{
+    const last=it.subs[it.subs.length-1];
+    if(last&&!/\$\s*[\d.]+/.test(it.linea)){
+      const m=last.match(/\s(\$[\d.]+(?:\s*🔥)?)$/);
+      if(m){it.subs[it.subs.length-1]=last.slice(0,m.index).trim();it.linea+=' '+m[1];}
+    }
+  });
+  return out;
+}
+function parseItems(p){ return parseItemsDetalle(p).map(it=>it.linea); }
+function formatearPlato(it){
+  let linea=it.linea;
+  let subs=[];
+  it.subs.forEach(s=>s.split(/\s*\|\s*/).forEach(x=>{if(x.trim())subs.push(x.trim());}));
+  const sab=linea.match(/\s*\[Sabores:\s*([^\]]+)\]/i);
+  if(sab){linea=linea.replace(sab[0],'');subs.unshift('🍕 '+sab[1].trim());}
+  let precio='';
+  const pm=linea.match(/\s*(\$\s*[\d.]+(?:\s*🔥)?)\s*$/);
+  if(pm){precio=pm[1].replace(/\s+/g,' ');linea=linea.slice(0,pm.index).replace(/\s*[—–-]+\s*$/,'');}
+  let qty='1',name=linea.trim();
+  const m1=name.match(/^(\d+)\s*[×x]\s*(.+)$/i);
+  const m2=name.match(/^(.+?)\s*[×x]\s*(\d+)$/i);
+  if(m1){qty=m1[1];name=m1[2].trim();}
+  else if(m2){qty=m2[2];name=m2[1].trim();}
+  return{qty,name,precio,subs};
 }
 function parseTotal(s){
   if(!s) return 0;
@@ -786,7 +820,7 @@ function appendOrders(n){
   }
 }
 function createOrderCard(order){
-  const itemsHtml=order.items.length>0?order.items.map(i=>`<div class="order-item-line">• ${escHtml(i)}</div>`).join(''):`<div class="order-item-line">${escHtml(order.pedido||'—')}</div>`;
+  const itemsHtml=parseItemsDetalle(order.pedido).map(it=>{const f=formatearPlato(it);return `<div class="order-item-line">• <strong>${escHtml(f.qty)}×</strong> ${escHtml(f.name)}${f.precio?` <span style="color:var(--grey)">${escHtml(f.precio)}</span>`:''}</div>`+f.subs.map(s=>`<div class="order-item-line" style="padding-left:16px;font-size:12px;color:var(--grey)">${escHtml(s)}</div>`).join('');}).join('')||`<div class="order-item-line">${escHtml(order.pedido||'—')}</div>`;
   const badge=order.entrega?`<span class="entrega-badge ${order.entrega.toLowerCase().includes('dom')?'badge-dom':'badge-local'}">${escHtml(order.entrega)}</span>`:'';
   return`<div class="order-card" id="${order.id}">
     <div class="order-card-header"><div><div class="order-number">#${String(order.index).padStart(3,'0')} ${badge}</div><div class="order-client">${escHtml(order.cliente)}</div>${order.telefono?`<div class="order-meta">📞 ${escHtml(order.telefono)}</div>`:''}</div><button onclick="deleteOrder('${order.id}','${escHtml(String(order.supabaseId||order.index))}')" title="Eliminar" style="background:none;border:1px solid #2a1a1a;color:#555;cursor:pointer;border-radius:4px;padding:2px 7px;font-size:11px;display:block;margin-bottom:4px" onmouseover="this.style.color='#e05252';this.style.borderColor='#e05252'" onmouseout="this.style.color='#555';this.style.borderColor='#2a1a1a'">✕</button><div class="order-time">${escHtml(order.hora)}</div></div>

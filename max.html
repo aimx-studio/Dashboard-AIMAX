@@ -165,7 +165,11 @@ a{text-decoration:none;cursor:pointer}
 .ticket-items{margin-bottom:12px;border-bottom:1px dashed #ccc;padding-bottom:10px}
 .ticket-items-title{font-size:10px;color:#666;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
 .ticket-item{display:flex;gap:6px;font-size:13px;margin-bottom:4px}
-.ticket-item-qty{font-weight:700;min-width:28px}
+.ticket-item-block{margin-bottom:7px}
+.ticket-item-block .ticket-item{margin-bottom:1px;align-items:flex-start}
+.ticket-item-name{flex:1}
+.ticket-item-price{font-weight:700;white-space:nowrap}
+.ticket-item-sub{font-size:.85em;color:#444;margin:0 0 0 34px;line-height:1.35}
 .ticket-total{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:16px;padding:8px 0;border-bottom:1px dashed #ccc;margin-bottom:12px}
 .ticket-total-label{font-size:11px;letter-spacing:1px}
 .ticket-footer{text-align:center;font-size:11px;color:#666;padding-top:8px}
@@ -1047,9 +1051,43 @@ function parseDate(fecha,hora){
   }
   return new Date(0);
 }
-function parseItems(p){
+function parseItemsDetalle(p){
   if(!p) return [];
-  return p.split(/[,\n]/).map(s=>s.trim().replace(/^[•\-\*]+\s*/,'')).filter(Boolean);
+  const texto=String(p).replace(/\r/g,'');
+  if(!texto.includes('•')){
+    return texto.split(/[,\n]/).map(s=>s.trim()).filter(Boolean).map(l=>({linea:l,subs:[]}));
+  }
+  const lineas=texto.replace(/\s*\|\s*(?=•)/g,'\n').split('\n').map(s=>s.trim()).filter(Boolean);
+  const out=[];
+  lineas.forEach(l=>{
+    if(l.startsWith('•')||!out.length) out.push({linea:l.replace(/^[•\-\*]+\s*/,''),subs:[]});
+    else out[out.length-1].subs.push(l);
+  });
+  out.forEach(it=>{
+    const last=it.subs[it.subs.length-1];
+    if(last&&!/\$\s*[\d.]+/.test(it.linea)){
+      const m=last.match(/\s(\$[\d.]+(?:\s*🔥)?)$/);
+      if(m){it.subs[it.subs.length-1]=last.slice(0,m.index).trim();it.linea+=' '+m[1];}
+    }
+  });
+  return out;
+}
+function parseItems(p){ return parseItemsDetalle(p).map(it=>it.linea); }
+function formatearPlato(it){
+  let linea=it.linea;
+  let subs=[];
+  it.subs.forEach(s=>s.split(/\s*\|\s*/).forEach(x=>{if(x.trim())subs.push(x.trim());}));
+  const sab=linea.match(/\s*\[Sabores:\s*([^\]]+)\]/i);
+  if(sab){linea=linea.replace(sab[0],'');subs.unshift('🍕 '+sab[1].trim());}
+  let precio='';
+  const pm=linea.match(/\s*(\$\s*[\d.]+(?:\s*🔥)?)\s*$/);
+  if(pm){precio=pm[1].replace(/\s+/g,' ');linea=linea.slice(0,pm.index).replace(/\s*[—–-]+\s*$/,'');}
+  let qty='1',name=linea.trim();
+  const m1=name.match(/^(\d+)\s*[×x]\s*(.+)$/i);
+  const m2=name.match(/^(.+?)\s*[×x]\s*(\d+)$/i);
+  if(m1){qty=m1[1];name=m1[2].trim();}
+  else if(m2){qty=m2[2];name=m2[1].trim();}
+  return{qty,name,precio,subs};
 }
 function parseTotal(s){
   if(!s) return 0;
@@ -1354,7 +1392,7 @@ function appendOrders(n){
   }
 }
 function createOrderCard(order){
-  const itemsHtml=order.items.length>0?order.items.map(i=>`<div class="order-item-line">• ${escHtml(i)}</div>`).join(''):`<div class="order-item-line">${escHtml(order.pedido||'—')}</div>`;
+  const itemsHtml=parseItemsDetalle(order.pedido).map(it=>{const f=formatearPlato(it);return `<div class="order-item-line">• <strong>${escHtml(f.qty)}×</strong> ${escHtml(f.name)}${f.precio?` <span style="color:var(--grey)">${escHtml(f.precio)}</span>`:''}</div>`+f.subs.map(s=>`<div class="order-item-line" style="padding-left:16px;font-size:12px;color:var(--grey)">${escHtml(s)}</div>`).join('');}).join('')||`<div class="order-item-line">${escHtml(order.pedido||'—')}</div>`;
   const badge=order.entrega?`<span class="entrega-badge ${order.entrega.toLowerCase().includes('dom')?'badge-dom':'badge-local'}">${escHtml(order.entrega)}</span>`:'';
   const pd=encodeURIComponent(JSON.stringify({id:order.id,index:order.index,cliente:order.cliente,telefono:order.telefono,fecha:order.fecha,hora:order.hora,pedido:order.pedido,items:order.items,entrega:order.entrega,direccion:order.direccion,pago:order.pago,extras:order.extras,total:order.total,efectivo:order.efectivo}));
   return`<div class="order-card" id="${order.id}">
@@ -2022,7 +2060,7 @@ function printOrder(encodedData){
   const items=order.items&&order.items.length>0?order.items:(order.pedido||'').split(/[,\n]/).map(s=>s.trim()).filter(Boolean);
   function pqi(line){const m1=line.match(/^(\d+)\s*[×x]\s*(.+)/i);const m2=line.match(/^(.+?)\s*[×x](\d+)$/i);if(m1)return{qty:m1[1],name:m1[2].trim()};if(m2)return{qty:m2[2],name:m2[1].trim()};return{qty:'1',name:line};}
   const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const itemsHtml=items.map(l=>{const{qty,name}=pqi(l);return`<div class="ticket-item"><span class="ticket-item-qty">${esc(qty)}x</span><span> ${esc(name)}</span></div>`;}).join('');
+  const itemsHtml=parseItemsDetalle(order.pedido).map(it=>{const f=formatearPlato(it);return `<div class="ticket-item-block"><div class="ticket-item"><span class="ticket-item-qty">${esc(f.qty)}x</span><span class="ticket-item-name">${esc(f.name)}</span>${f.precio?`<span class="ticket-item-price">${esc(f.precio)}</span>`:''}</div>`+f.subs.map(s=>`<div class="ticket-item-sub">${esc(s)}</div>`).join('')+`</div>`;}).join('');
   const totalHtml=order.total?`<div class="ticket-total"><span class="ticket-total-label">TOTAL</span><span class="ticket-total-value">${esc(order.total)}</span></div>`:'';
   const paga=parseInt(String(order.efectivo||'').replace(/\D/g,''));const tot=parseInt(String(order.total||'').replace(/\D/g,''));const dev=paga-tot;
   container.innerHTML=`<div class="ticket-header"><div class="ticket-logo">AIMAX</div>${rName?`<div class="ticket-resto">${esc(rName)}</div>`:''}<div class="ticket-tagline">Sistema de Pedidos</div></div><div class="ticket-info"><div class="ticket-info-row"><span class="ticket-info-label">PEDIDO #</span><span class="ticket-info-value">${String(order.index||'—').padStart(3,'0')}</span></div><div class="ticket-info-row"><span class="ticket-info-label">FECHA/HORA</span><span class="ticket-info-value">${esc((order.fecha||'')+' '+(order.hora||''))}</span></div></div><div class="ticket-client"><div class="ticket-client-label">Cliente</div><div class="ticket-client-name">${esc(order.cliente||'Sin nombre')}</div>${order.telefono?`<div style="font-size:11px;color:#666;margin-top:2px">📞 ${esc(order.telefono)}</div>`:''}</div><div class="ticket-items"><div class="ticket-items-title">Detalle del Pedido</div>${itemsHtml||`<div>${esc(order.pedido||'—')}</div>`}</div>${order.extras?`<div style="font-size:11px;color:#666;margin-bottom:4px">📝 ${esc(order.extras)}</div>`:''} ${order.entrega?`<div class="ticket-info-row"><span class="ticket-info-label">ENTREGA</span><span class="ticket-info-value">${esc(order.entrega)}</span></div>`:''} ${order.direccion?`<div class="ticket-info-row"><span class="ticket-info-label">DIRECCIÓN</span><span class="ticket-info-value">${esc(order.direccion)}</span></div>`:''} ${order.pago?`<div class="ticket-info-row"><span class="ticket-info-label">PAGO</span><span class="ticket-info-value">${esc(order.pago)}</span></div>`:''} ${order.efectivo?`<div class="ticket-info-row"><span class="ticket-info-label">PAGA CON</span><span class="ticket-info-value">${esc(order.efectivo)}</span></div>`:''} ${paga>0&&dev>0?`<div class="ticket-info-row"><span class="ticket-info-label">DEVUELTA</span><span class="ticket-info-value">$${dev.toLocaleString('es-CO')}</span></div>`:''} ${totalHtml}<div class="ticket-footer"><div>¡Gracias por tu pedido!</div><div class="footer-brand">powered by AIMAX</div></div>`;
