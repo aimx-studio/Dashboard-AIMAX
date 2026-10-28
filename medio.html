@@ -533,7 +533,21 @@ function parseItemsDetalle(p){
   });
   return out;
 }
-function parseItems(p){ return parseItemsDetalle(p).map(it=>it.linea); }
+function parseItems(p){
+  return parseItemsDetalle(p).map(it=>{
+    let s=String(it.linea||'').replace(/^[•\-\*\s]+/,'').trim();
+    s=s.replace(/\s*\[[^\]]*\]/g,'');
+    s=s.replace(/\s*\$\s*[\d.,]+(?:\s*🔥)?\s*$/,'');
+    let qty=1,m;
+    if((m=s.match(/^(\d+)\s*[×x]\s*(.+)$/i))){qty=parseInt(m[1]);s=m[2];}
+    else if((m=s.match(/^(.+?)\s*[×x]\s*(\d+)$/i))){qty=parseInt(m[2]);s=m[1];}
+    s=s.replace(/^Pizza\s*[—–]\s*/i,'Pizza ');
+    s=s.replace(/^(Pizza Porción)\s*\(([^)]+)\)/i,'$1 $2');
+    s=s.replace(/\s*[—–].*$/,'');
+    s=s.replace(/\s+/g,' ').trim();
+    return s?`${qty} × ${s}`:'';
+  }).filter(Boolean);
+}
 function formatearPlato(it){
   let linea=it.linea;
   let subs=[];
